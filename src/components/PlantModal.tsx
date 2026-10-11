@@ -69,6 +69,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const [lineageOrNursery, setLineageOrNursery] = useState('');
   const [acquisitionDate, setAcquisitionDate] = useState('');
   const [lastWateredDate, setLastWateredDate] = useState('');
+  const [lastRepottedDate, setLastRepottedDate] = useState('');
+  const [repottingHistory, setRepottingHistory] = useState<string[]>([]);
+  const [newRepotDate, setNewRepotDate] = useState('');
   const [soilMix, setSoilMix] = useState('');
   const [potSize, setPotSize] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -106,6 +109,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(existingDraft.lineageOrNursery || '');
       setAcquisitionDate(existingDraft.acquisitionDate || '');
       setLastWateredDate(existingDraft.lastWateredDate || '');
+      setLastRepottedDate(existingDraft.lastRepottedDate || '');
+      setRepottingHistory(existingDraft.repottingHistory || (existingDraft.lastRepottedDate ? [existingDraft.lastRepottedDate] : []));
       setSoilMix(existingDraft.soilMix || '');
       setPotSize(existingDraft.potSize || '');
       setImageUrl(existingDraft.imageUrl || '');
@@ -124,6 +129,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
       setAcquisitionDate(editingPlant.acquisitionDate || '');
       setLastWateredDate(editingPlant.lastWateredDate || '');
+      setLastRepottedDate(editingPlant.lastRepottedDate || '');
+      setRepottingHistory(editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []));
       setSoilMix(editingPlant.soilMix || '');
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
@@ -145,6 +152,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(isSeedlingMode ? 'Koehres種子' : '');
       setAcquisitionDate(today);
       setLastWateredDate(today);
+      setLastRepottedDate(today);
+      setRepottingHistory([today]);
       setSoilMix(isSeedlingMode ? '種まき専用微粒子土 : バーミキュライト' : '赤玉土4 : 鹿沼土3 : 軽石3');
       setPotSize(isSeedlingMode ? '実生連結トレイ 24穴' : 'プレステラ90');
       setImageUrl('');
@@ -169,6 +178,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         lineageOrNursery,
         acquisitionDate,
         lastWateredDate,
+        lastRepottedDate,
+        repottingHistory,
         soilMix,
         potSize,
         imageUrl,
@@ -195,8 +206,30 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         setSavedNotice(null);
       }, 3000);
     },
-    [draftKey, id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, soilMix, potSize, imageUrl, notes]
+    [draftKey, id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, lastRepottedDate, repottingHistory, soilMix, potSize, imageUrl, notes]
   );
+
+  // 植え替え履歴への追加ハンドラー
+  const handleAddRepotDate = (dateToAdd: string) => {
+    if (!dateToAdd) return;
+    const historySet = new Set(repottingHistory);
+    historySet.add(dateToAdd);
+    const sorted = Array.from(historySet).sort().reverse();
+    setRepottingHistory(sorted);
+    // 最新の日付なら最終植え替え日も更新
+    if (!lastRepottedDate || dateToAdd >= lastRepottedDate) {
+      setLastRepottedDate(dateToAdd);
+    }
+  };
+
+  // 植え替え履歴からの削除ハンドラー
+  const handleRemoveRepotDate = (dateToRemove: string) => {
+    const updated = repottingHistory.filter((d) => d !== dateToRemove);
+    setRepottingHistory(updated);
+    if (lastRepottedDate === dateToRemove) {
+      setLastRepottedDate(updated.length > 0 ? updated[0] : '');
+    }
+  };
 
   // 自動保存
   useEffect(() => {
@@ -253,6 +286,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
       setAcquisitionDate(editingPlant.acquisitionDate || '');
       setLastWateredDate(editingPlant.lastWateredDate || '');
+      setLastRepottedDate(editingPlant.lastRepottedDate || '');
+      setRepottingHistory(editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []));
       setSoilMix(editingPlant.soilMix || '');
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
@@ -267,6 +302,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery('');
       setAcquisitionDate(today);
       setLastWateredDate(today);
+      setLastRepottedDate(today);
+      setRepottingHistory([today]);
       setSoilMix('赤玉土4 : 鹿沼土3 : 軽石3');
       setPotSize('プレステラ90');
       setImageUrl('');
@@ -310,6 +347,16 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     const parsedSeedCount = seedCount ? parseInt(seedCount, 10) : undefined;
     const parsedGerminationCount = germinationCount ? parseInt(germinationCount, 10) : undefined;
 
+    // 植え替え履歴の整理
+    const finalRepotHistory = Array.from(
+      new Set(
+        [
+          lastRepottedDate ? lastRepottedDate : null,
+          ...repottingHistory,
+        ].filter(Boolean) as string[]
+      )
+    ).sort().reverse();
+
     onSave({
       id: trimmedId,
       name: trimmedName,
@@ -319,6 +366,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       lineageOrNursery: lineageOrNursery.trim(),
       acquisitionDate,
       lastWateredDate,
+      lastRepottedDate: lastRepottedDate || undefined,
+      repottingHistory: finalRepotHistory,
       soilMix: soilMix.trim(),
       potSize: potSize.trim(),
       imageUrl: imageUrl.trim(),
@@ -703,8 +752,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </div>
           </div>
 
-          {/* 入手日/播種日 ＆ 最終水やり日 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* 入手日/播種日 ＆ 最終水やり日 ＆ 最終植え替え日 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 {managementType === 'seedling' ? '播種日 (種まき日)' : '入手日'}
@@ -713,20 +762,112 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 type="date"
                 value={acquisitionDate}
                 onChange={(e) => setAcquisitionDate(e.target.value)}
-                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                最終水やり / 霧吹き日
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-300">
+                  最終水やり / 霧吹き日
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setLastWateredDate(new Date().toISOString().split('T')[0])}
+                  className="text-[10px] text-emerald-400 hover:underline cursor-pointer"
+                >
+                  今日にする
+                </button>
+              </div>
               <input
                 type="date"
                 value={lastWateredDate}
                 onChange={(e) => setLastWateredDate(e.target.value)}
-                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
               />
             </div>
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-300">
+                  最終植え替え日
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    setLastRepottedDate(today);
+                    handleAddRepotDate(today);
+                  }}
+                  className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+                >
+                  今日にする
+                </button>
+              </div>
+              <input
+                type="date"
+                value={lastRepottedDate}
+                onChange={(e) => {
+                  setLastRepottedDate(e.target.value);
+                  if (e.target.value) handleAddRepotDate(e.target.value);
+                }}
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
+              />
+            </div>
+          </div>
+
+          {/* 植え替え履歴管理セクション */}
+          <div className="bg-[#17181c] border border-[#2d2e36] rounded-xl p-3 space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
+                <span>🌱 植え替え履歴</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">
+                  {repottingHistory.length} 件
+                </span>
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={newRepotDate}
+                  onChange={(e) => setNewRepotDate(e.target.value)}
+                  className="px-2 py-1 text-xs bg-[#202126] border border-[#353640] rounded-lg text-gray-200 focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddRepotDate(newRepotDate)}
+                  disabled={!newRepotDate}
+                  className="px-2.5 py-1 text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  ＋ 履歴に追加
+                </button>
+              </div>
+            </div>
+
+            {repottingHistory.length > 0 ? (
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                {repottingHistory.map((dateStr) => (
+                  <span
+                    key={dateStr}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-[#212228] text-gray-200 border border-[#32343e]"
+                  >
+                    <span>{dateStr.replace(/-/g, '/')}</span>
+                    {dateStr === lastRepottedDate && (
+                      <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-sans font-bold">
+                        最新
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRepotDate(dateStr)}
+                      className="text-gray-400 hover:text-red-400 ml-0.5 cursor-pointer leading-none text-sm"
+                      title="この履歴を削除"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-gray-500 italic">植え替え履歴はまだ記録されていません</p>
+            )}
           </div>
 
           {/* 血統/種子元 ＆ 鉢/トレイサイズ */}

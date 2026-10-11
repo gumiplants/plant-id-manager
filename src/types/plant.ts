@@ -15,6 +15,9 @@ export interface Plant {
   lineageOrNursery: string;   // 血統・ナーセリー名 / 種子元 (例: Koehres種子, 自家採取)
   acquisitionDate: string;    // 入手日 / 播種日 (YYYY-MM-DD)
   lastWateredDate?: string;   // 最終水やり日 (YYYY-MM-DD)
+  wateringHistory?: string[]; // 水やり履歴 (YYYY-MM-DD[])
+  lastRepottedDate?: string;  // 最終植え替え日 (YYYY-MM-DD)
+  repottingHistory?: string[]; // 植え替え履歴 (YYYY-MM-DD[])
   soilMix: string;            // 用土配合 (例: プレステラ専用配合, 種まき用土)
   potSize: string;            // 現在の鉢サイズ / トレイ
   imageUrl?: string;          // 植物写真 (URLまたはBase64)
@@ -27,6 +30,6 @@ export interface Plant {
   germinationCount?: number;  // 発芽数
 }
 
-export type SortField = 'id' | 'name' | 'acquisitionDate' | 'createdAt' | 'watered';
+export type SortField = 'id' | 'name' | 'acquisitionDate' | 'createdAt' | 'watered' | 'repotted';
 export type SortOrder = 'asc' | 'desc';
 export type ViewMode = 'card' | 'table';

@@ -24,6 +24,8 @@ export const INITIAL_PLANTS: Plant[] = [
     lineageOrNursery: '台湾 Lize Gardner産',
     acquisitionDate: '2026-05-10',
     lastWateredDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3日前
+    lastRepottedDate: '2026-05-12',
+    repottingHistory: ['2026-05-12'],
     soilMix: '赤玉土4 : 鹿沼土3 : 軽石2 : くん炭1',
     potSize: 'プレステラ105 (深鉢)',
     imageUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',
@@ -242,6 +244,9 @@ export interface PlantDraft {
   lineageOrNursery: string;
   acquisitionDate: string;
   lastWateredDate?: string;
+  wateringHistory?: string[];
+  lastRepottedDate?: string;
+  repottingHistory?: string[];
   soilMix: string;
   potSize: string;
   imageUrl?: string;

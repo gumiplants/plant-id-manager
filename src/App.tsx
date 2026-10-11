@@ -237,6 +237,41 @@ export const App: React.FC = () => {
     }
   };
 
+  // 「植え替え完了」ボタンのアクション
+  const handleRepotPlant = (targetPlant: Plant) => {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+
+    const existingHistory =
+      targetPlant.repottingHistory || (targetPlant.lastRepottedDate ? [targetPlant.lastRepottedDate] : []);
+    const updatedHistory = Array.from(new Set([today, ...existingHistory])).sort().reverse();
+
+    setPlants((prev) =>
+      prev.map((item) =>
+        item.id === targetPlant.id
+          ? {
+              ...item,
+              lastRepottedDate: today,
+              repottingHistory: updatedHistory,
+              updatedAt: now,
+            }
+          : item
+      )
+    );
+
+    if (detailPlant?.id === targetPlant.id) {
+      setDetailPlant((prev) =>
+        prev
+          ? {
+              ...prev,
+              lastRepottedDate: today,
+              repottingHistory: updatedHistory,
+            }
+          : null
+      );
+    }
+  };
+
   // 削除の実行
   const handleConfirmDelete = () => {
     if (!deletingPlant) return;
@@ -560,6 +595,7 @@ export const App: React.FC = () => {
         }}
         onDelete={(plant) => setDeletingPlant(plant)}
         onWaterPlant={handleWaterPlant}
+        onRepotPlant={handleRepotPlant}
         onDuplicate={handleDuplicatePlant}
       />
 

@@ -150,6 +150,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       '出自・種子元',
       '入手日/播種日',
       '最終水やり日',
+      '最終植え替え日',
+      '植え替え履歴',
       '播種数(粒)',
       '発芽数(株)',
       '発芽率(%)',
@@ -177,6 +179,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           ? `${Math.round((plant.germinationCount / plant.seedCount) * 100)}%`
           : '';
 
+      const repotHistoryStr = (
+        plant.repottingHistory || (plant.lastRepottedDate ? [plant.lastRepottedDate] : [])
+      ).join('; ');
+
       const escape = (val: any) => {
         if (val === undefined || val === null) return '""';
         const str = String(val).replace(/"/g, '""');
@@ -192,6 +198,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         escape(plant.lineageOrNursery || ''),
         escape(plant.acquisitionDate || ''),
         escape(plant.lastWateredDate || ''),
+        escape(plant.lastRepottedDate || ''),
+        escape(repotHistoryStr),
         escape(plant.seedCount !== undefined ? plant.seedCount : ''),
         escape(plant.germinationCount !== undefined ? plant.germinationCount : ''),
         escape(germRate),

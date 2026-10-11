@@ -233,6 +233,17 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                         <span>水やり未記録</span>
                       )}
                     </p>
+                    {plant.lastRepottedDate && (
+                      <p className="flex items-center gap-1 text-[11px]">
+                        <span>植え替え:</span>
+                        <span className={`font-mono ${isDark ? 'text-amber-300' : 'text-amber-800 font-medium'}`}>
+                          {plant.lastRepottedDate.replace(/-/g, '/')}
+                        </span>
+                        <span className="text-[10px] opacity-80">
+                          ({getDaysSince(plant.lastRepottedDate)}日前)
+                        </span>
+                      </p>
+                    )}
                   </div>
 
                   <button
