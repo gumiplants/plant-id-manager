@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Plant, ManagementType } from '../types/plant';
 import {
   generateNextId,
   saveFormDraft,
   loadFormDraft,
   clearFormDraft,
+  getStoredPotSizes,
+  saveStoredPotSize,
+  getStoredSoilMixes,
+  saveStoredSoilMix,
 } from '../utils/storage';
 import {
   X,
@@ -89,6 +93,26 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draftKey = editingPlant ? `edit_${editingPlant.id}` : 'new';
   const autoSaveTimerRef = useRef<number | null>(null);
+
+  // 鉢・サイズの候補一覧（ユーザー入力履歴 + 登録済み全株データ + デフォルト）
+  const availablePotSizes = useMemo(() => {
+    const custom = getStoredPotSizes();
+    const fromPlants = allPlants
+      .map((p) => p.potSize?.trim())
+      .filter((s): s is string => !!s);
+    const combined = Array.from(new Set([...custom, ...fromPlants, ...COMMON_POT_SIZES]));
+    return combined.filter(Boolean);
+  }, [allPlants, isOpen]);
+
+  // 用土配合の候補一覧（ユーザー入力履歴 + 登録済み全株データ + デフォルト）
+  const availableSoilMixes = useMemo(() => {
+    const custom = getStoredSoilMixes();
+    const fromPlants = allPlants
+      .map((p) => p.soilMix?.trim())
+      .filter((s): s is string => !!s);
+    const combined = Array.from(new Set([...custom, ...fromPlants, ...COMMON_SOIL_PRESETS]));
+    return combined.filter(Boolean);
+  }, [allPlants, isOpen]);
 
   // 初期化 & 下書き復元処理
   useEffect(() => {
@@ -364,6 +388,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         ].filter(Boolean) as string[]
       )
     ).sort().reverse();
+
+    // ユーザー独自の鉢・サイズや用土配合を次回候補として記録
+    if (potSize.trim()) {
+      saveStoredPotSize(potSize.trim());
+    }
+    if (soilMix.trim()) {
+      saveStoredSoilMix(soilMix.trim());
+    }
 
     onSave({
       id: trimmedId,
@@ -901,27 +933,42 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                {managementType === 'seedling' ? '現在の鉢 / 実生トレイ' : '現在の鉢サイズ'}
+                {managementType === 'seedling' ? '現在の鉢・サイズ (トレイ)' : '現在の鉢・サイズ'}
               </label>
               <input
                 type="text"
+                list="pot-size-suggestions"
                 value={potSize}
                 onChange={(e) => setPotSize(e.target.value)}
                 placeholder={managementType === 'seedling' ? '例: 実生連結トレイ 24穴、プレステラ90' : '例: プレステラ90、3号陶器鉢'}
                 className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
               />
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {COMMON_POT_SIZES.slice(0, 4).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setPotSize(size)}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-[#27282f] hover:bg-[#32343d] text-gray-300 border border-[#373944] cursor-pointer"
-                  >
-                    {size}
-                  </button>
+              <datalist id="pot-size-suggestions">
+                {availablePotSizes.map((size) => (
+                  <option key={size} value={size} />
                 ))}
-              </div>
+              </datalist>
+              {availablePotSizes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5 max-h-20 overflow-y-auto">
+                  {availablePotSizes.slice(0, 8).map((size) => {
+                    const isSelected = potSize === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setPotSize(size)}
+                        className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-950/70 text-amber-300 border-amber-600/80 font-medium'
+                            : 'bg-[#27282f] hover:bg-[#32343d] text-gray-300 border-[#373944]'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -932,23 +979,38 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </label>
             <input
               type="text"
+              list="soil-mix-suggestions"
               value={soilMix}
               onChange={(e) => setSoilMix(e.target.value)}
               placeholder="例: 赤玉土4 : 鹿沼土3 : 軽石3"
               className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
             />
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {COMMON_SOIL_PRESETS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setSoilMix(preset)}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-[#27282f] hover:bg-[#32343d] text-gray-300 border border-[#373944] cursor-pointer"
-                >
-                  {preset}
-                </button>
+            <datalist id="soil-mix-suggestions">
+              {availableSoilMixes.map((preset) => (
+                <option key={preset} value={preset} />
               ))}
-            </div>
+            </datalist>
+            {availableSoilMixes.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5 max-h-24 overflow-y-auto">
+                {availableSoilMixes.slice(0, 8).map((preset) => {
+                  const isSelected = soilMix === preset;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setSoilMix(preset)}
+                      className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-950/70 text-amber-300 border-amber-600/80 font-medium'
+                          : 'bg-[#27282f] hover:bg-[#32343d] text-gray-300 border-[#373944]'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* メモ */}

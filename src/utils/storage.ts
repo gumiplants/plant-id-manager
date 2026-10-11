@@ -440,3 +440,52 @@ export const processIconImage = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+
+const POT_SIZE_STORAGE_KEY = 'plant_id_manager_custom_pot_sizes';
+const SOIL_MIX_STORAGE_KEY = 'plant_id_manager_custom_soil_mixes';
+
+// ユーザーが入力したカスタム鉢・サイズ履歴を取得
+export const getStoredPotSizes = (): string[] => {
+  try {
+    const raw = localStorage.getItem(POT_SIZE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+// 新しい鉢・サイズを履歴に保存
+export const saveStoredPotSize = (potSize: string): void => {
+  const trimmed = potSize.trim();
+  if (!trimmed) return;
+  try {
+    const existing = getStoredPotSizes();
+    const updated = Array.from(new Set([trimmed, ...existing])).slice(0, 30);
+    localStorage.setItem(POT_SIZE_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('鉢サイズの保存失敗:', e);
+  }
+};
+
+// ユーザーが入力したカスタム用土配合履歴を取得
+export const getStoredSoilMixes = (): string[] => {
+  try {
+    const raw = localStorage.getItem(SOIL_MIX_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+// 新しい用土配合を履歴に保存
+export const saveStoredSoilMix = (soilMix: string): void => {
+  const trimmed = soilMix.trim();
+  if (!trimmed) return;
+  try {
+    const existing = getStoredSoilMixes();
+    const updated = Array.from(new Set([trimmed, ...existing])).slice(0, 30);
+    localStorage.setItem(SOIL_MIX_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('用土配合の保存失敗:', e);
+  }
+};

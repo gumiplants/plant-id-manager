@@ -194,7 +194,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
             </div>
             <div>
               <span className="text-[#787a87] block mb-1">
-                {plant.managementType === 'seedling' ? '現在の鉢 / トレイ' : '現在の鉢サイズ'}
+                {plant.managementType === 'seedling' ? '現在の鉢・サイズ (トレイ)' : '現在の鉢・サイズ'}
               </span>
               <span className="text-gray-200 flex items-center gap-1.5">
                 <Box className="w-3.5 h-3.5 text-gray-400" />
