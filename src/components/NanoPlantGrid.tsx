@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant, GridSize, Theme } from '../types/plant';
 import { getDaysSince } from '../utils/storage';
-import { Droplet, Edit3, Trash2, Sprout, Box } from 'lucide-react';
+import { Droplet, Edit3, Trash2, Sprout, Box, Copy } from 'lucide-react';
 
 interface NanoPlantGridProps {
   plants: Plant[];
@@ -11,6 +11,7 @@ interface NanoPlantGridProps {
   onEdit: (plant: Plant) => void;
   onDelete: (plant: Plant) => void;
   onWaterPlant: (plant: Plant) => void;
+  onDuplicate?: (plant: Plant) => void;
 }
 
 export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
@@ -21,6 +22,7 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
   onEdit,
   onDelete,
   onWaterPlant,
+  onDuplicate,
 }) => {
   if (plants.length === 0) {
     return null;
@@ -81,6 +83,15 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                   className="absolute top-3.5 right-3.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {onDuplicate && (
+                    <button
+                      onClick={() => onDuplicate(plant)}
+                      className="p-2 rounded-lg bg-black/60 hover:bg-amber-950/80 text-gray-200 hover:text-amber-300 border border-white/10 backdrop-blur transition-colors"
+                      title="この株を複製 (コピー)"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onEdit(plant)}
                     className="p-2 rounded-lg bg-black/60 hover:bg-black/80 text-gray-200 hover:text-white border border-white/10 backdrop-blur transition-colors"
@@ -429,6 +440,15 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                 className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                 onClick={(e) => e.stopPropagation()}
               >
+                {onDuplicate && (
+                  <button
+                    onClick={() => onDuplicate(plant)}
+                    className="p-1.5 rounded-lg bg-black/60 hover:bg-amber-950/80 text-gray-200 hover:text-amber-300 border border-white/10 backdrop-blur transition-colors"
+                    title="この株を複製 (コピー)"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => onEdit(plant)}
                   className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-gray-200 hover:text-white border border-white/10 backdrop-blur transition-colors"

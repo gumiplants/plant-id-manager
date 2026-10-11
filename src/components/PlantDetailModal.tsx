@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant } from '../types/plant';
 import { getDaysSince } from '../utils/storage';
-import { X, Calendar, Edit3, Trash2, Sprout, Clock, Droplet, Box } from 'lucide-react';
+import { X, Calendar, Edit3, Trash2, Sprout, Clock, Droplet, Box, Copy } from 'lucide-react';
 
 interface PlantDetailModalProps {
   plant: Plant | null;
@@ -9,6 +9,7 @@ interface PlantDetailModalProps {
   onEdit: (plant: Plant) => void;
   onDelete: (plant: Plant) => void;
   onWaterPlant: (plant: Plant) => void;
+  onDuplicate?: (plant: Plant) => void;
 }
 
 export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
@@ -17,6 +18,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
   onEdit,
   onDelete,
   onWaterPlant,
+  onDuplicate,
 }) => {
   if (!plant) return null;
 
@@ -185,32 +187,46 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
         </div>
 
         {/* フッター操作 */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#17181c] border-t border-[#2a2b33]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 bg-[#17181c] border-t border-[#2a2b33] flex-wrap gap-2">
           <button
             onClick={() => {
               onDelete(plant);
               onClose();
             }}
-            className="px-3.5 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-950/50 border border-red-800/60 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-950/50 border border-red-800/60 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            削除する
+            <span>削除</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {onDuplicate && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onDuplicate(plant);
+                }}
+                className="px-3.5 py-1.5 text-xs font-semibold text-amber-300 hover:text-amber-100 bg-amber-950/50 hover:bg-amber-900/70 border border-amber-600/60 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="この株の情報を丸ごとコピーして新しい株を登録"
+              >
+                <Copy className="w-3.5 h-3.5 text-amber-400" />
+                <span>株を複製 (コピー)</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 onClose();
                 onEdit(plant);
               }}
-              className="px-4 py-1.5 text-xs font-medium text-gray-200 bg-[#282931] hover:bg-[#343540] border border-[#3b3c48] rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-medium text-gray-200 bg-[#282931] hover:bg-[#343540] border border-[#3b3c48] rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              編集する
+              <span>編集</span>
             </button>
             <button
               onClick={onClose}
-              className="px-5 py-1.5 text-xs font-bold text-black bg-[#fbbf24] hover:bg-[#f59e0b] rounded-full transition-colors cursor-pointer"
+              className="px-4 py-1.5 text-xs font-bold text-black bg-[#fbbf24] hover:bg-[#f59e0b] rounded-full transition-colors cursor-pointer"
             >
               閉じる
             </button>

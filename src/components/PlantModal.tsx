@@ -18,6 +18,7 @@ import {
   Upload,
   Sprout,
   Trees,
+  Copy,
 } from 'lucide-react';
 
 interface PlantModalProps {
@@ -27,6 +28,7 @@ interface PlantModalProps {
   editingPlant: Plant | null;
   allPlants: Plant[];
   defaultManagementType?: ManagementType;
+  isDuplicate?: boolean;
 }
 
 const COMMON_POT_SIZES = [
@@ -57,6 +59,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   editingPlant,
   allPlants,
   defaultManagementType = 'normal',
+  isDuplicate = false,
 }) => {
   const [managementType, setManagementType] = useState<ManagementType>(defaultManagementType);
   const [id, setId] = useState('');
@@ -339,19 +342,30 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-gray-100">
-                  {editingPlant
+                  {isDuplicate
+                    ? `${editingPlant?.name} をコピーして新規登録`
+                    : editingPlant
                     ? `${editingPlant.name} の編集`
                     : managementType === 'seedling'
                     ? '新しい実生苗（種まき）を登録'
                     : '新しい株を登録'}
                 </h2>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-medium flex items-center gap-1">
-                  <Save className="w-3 h-3" />
-                  入力保護中
-                </span>
+                {isDuplicate ? (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800/60 font-medium flex items-center gap-1">
+                    <Copy className="w-3 h-3" />
+                    複製モード
+                  </span>
+                ) : (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-medium flex items-center gap-1">
+                    <Save className="w-3 h-3" />
+                    入力保護中
+                  </span>
+                )}
               </div>
               <p className="text-xs text-gray-400">
-                {editingPlant
+                {isDuplicate
+                  ? `新しい管理ID: ${id} として複製登録します`
+                  : editingPlant
                   ? `管理ID: ${editingPlant.id} の情報を更新します`
                   : managementType === 'seedling'
                   ? '播種日や種子元、発芽数を記録して実生育成を管理します'
@@ -826,7 +840,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     : 'text-black bg-[#fbbf24] hover:bg-[#f59e0b] active:bg-[#d97706] shadow-amber-950'
                 }`}
               >
-                {editingPlant
+                {isDuplicate
+                  ? '複製して新規登録する'
+                  : editingPlant
                   ? '変更を確定・保存する'
                   : managementType === 'seedling'
                   ? 'この実生苗を登録する'

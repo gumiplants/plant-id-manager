@@ -10,6 +10,7 @@ import {
   saveBrandIcon,
   loadFooterText,
   saveFooterText,
+  generateNextId,
 } from './utils/storage';
 import { NanoHeader } from './components/NanoHeader';
 import { SearchBar } from './components/SearchBar';
@@ -78,6 +79,7 @@ export const App: React.FC = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
+  const [isDuplicate, setIsDuplicate] = useState(false);
   const [detailPlant, setDetailPlant] = useState<Plant | null>(null);
   const [deletingPlant, setDeletingPlant] = useState<Plant | null>(null);
 
@@ -142,11 +144,11 @@ export const App: React.FC = () => {
     } catch (_) {}
   };
 
-  // 新規登録 / 編集保存
+  // 新規登録 / 編集保存（複製時も新規として安全に保存）
   const handleSavePlant = (plantData: Omit<Plant, 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
 
-    if (editingPlant) {
+    if (editingPlant && !isDuplicate) {
       setPlants((prev) =>
         prev.map((item) =>
           item.id === editingPlant.id
@@ -166,6 +168,51 @@ export const App: React.FC = () => {
       };
       setPlants((prev) => [newPlant, ...prev]);
     }
+    setIsDuplicate(false);
+  };
+
+  // 既存株をまるまるコピーして新規登録する機能
+  const handleDuplicatePlant = (sourcePlant: Plant) => {
+    let prefix = 'PLT';
+    if (sourcePlant.managementType === 'seedling') {
+      prefix = 'SDL';
+    } else {
+      switch (sourcePlant.category) {
+        case 'agave':
+          prefix = 'AGV';
+          break;
+        case 'caudex':
+          prefix = 'PAC';
+          break;
+        case 'shrub':
+          prefix = 'SHR';
+          break;
+        case 'cactus':
+          prefix = 'COP';
+          break;
+        default:
+          prefix = 'PLT';
+          break;
+      }
+    }
+
+    const nextId = generateNextId(prefix, plants);
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+
+    const duplicatedPlant: Plant = {
+      ...sourcePlant,
+      id: nextId,
+      name: `${sourcePlant.name} (複製)`,
+      acquisitionDate: today,
+      lastWateredDate: today,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setIsDuplicate(true);
+    setEditingPlant(duplicatedPlant);
+    setIsFormModalOpen(true);
   };
 
   // 「水やり完了」ボタンのアクション
@@ -308,6 +355,7 @@ export const App: React.FC = () => {
         theme={theme}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenCreateModal={() => {
+          setIsDuplicate(false);
           setEditingPlant(null);
           setIsFormModalOpen(true);
         }}
@@ -420,11 +468,13 @@ export const App: React.FC = () => {
             theme={theme}
             onViewDetail={(plant) => setDetailPlant(plant)}
             onEdit={(plant) => {
+              setIsDuplicate(false);
               setEditingPlant(plant);
               setIsFormModalOpen(true);
             }}
             onDelete={(plant) => setDeletingPlant(plant)}
             onWaterPlant={handleWaterPlant}
+            onDuplicate={handleDuplicatePlant}
           />
         ) : (
           /* テーブル表示（ライト・ダーク対応） */
@@ -433,6 +483,7 @@ export const App: React.FC = () => {
             theme={theme}
             onViewDetail={(plant) => setDetailPlant(plant)}
             onEdit={(plant) => {
+              setIsDuplicate(false);
               setEditingPlant(plant);
               setIsFormModalOpen(true);
             }}
@@ -464,6 +515,7 @@ export const App: React.FC = () => {
       <button
         type="button"
         onClick={() => {
+          setIsDuplicate(false);
           setEditingPlant(null);
           setIsFormModalOpen(true);
         }}
@@ -488,11 +540,13 @@ export const App: React.FC = () => {
         onClose={() => {
           setIsFormModalOpen(false);
           setEditingPlant(null);
+          setIsDuplicate(false);
         }}
         onSave={handleSavePlant}
         editingPlant={editingPlant}
         allPlants={plants}
         defaultManagementType={managementType}
+        isDuplicate={isDuplicate}
       />
 
       {/* 詳細モーダル */}
@@ -500,11 +554,13 @@ export const App: React.FC = () => {
         plant={detailPlant}
         onClose={() => setDetailPlant(null)}
         onEdit={(plant) => {
+          setIsDuplicate(false);
           setEditingPlant(plant);
           setIsFormModalOpen(true);
         }}
         onDelete={(plant) => setDeletingPlant(plant)}
         onWaterPlant={handleWaterPlant}
+        onDuplicate={handleDuplicatePlant}
       />
 
       {/* 削除確認モーダル */}
