@@ -21,7 +21,7 @@ echo [3/3] Pushing to GitHub...
 echo * If your browser opens, click "Sign in with your browser" / "Authorize" *
 echo.
 
-git push -u origin main --force
+git push -u origin main
 
 if %ERRORLEVEL% EQU 0 (
     echo.
