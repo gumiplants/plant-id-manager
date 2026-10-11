@@ -14,6 +14,30 @@ export const getDaysSince = (dateString?: string): number => {
   return Math.max(0, diffDays);
 };
 
+// 植え替え年月からの経過月数計算ヘルパー
+export const getMonthsSince = (ymString?: string): number => {
+  if (!ymString) return 0;
+  const parts = ymString.split('-');
+  if (parts.length < 2) return 0;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  if (isNaN(year) || isNaN(month)) return 0;
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const diffMonths = (currentYear - year) * 12 + (currentMonth - month);
+  return Math.max(0, diffMonths);
+};
+
+// 年月表示フォーマッター (例: 2026/05)
+export const formatYearMonth = (dateOrYm?: string): string => {
+  if (!dateOrYm) return '未記録';
+  const ym = dateOrYm.slice(0, 7).replace(/-/g, '/');
+  return ym || '未記録';
+};
+
 // 写真イメージ付きの初期サンプルデータ（画像UIを忠実に再現）
 export const INITIAL_PLANTS: Plant[] = [
   {
@@ -24,8 +48,8 @@ export const INITIAL_PLANTS: Plant[] = [
     lineageOrNursery: '台湾 Lize Gardner産',
     acquisitionDate: '2026-05-10',
     lastWateredDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3日前
-    lastRepottedDate: '2026-05-12',
-    repottingHistory: ['2026-05-12'],
+    lastRepottedDate: '2026-05',
+    repottingHistory: ['2026-05'],
     soilMix: '赤玉土4 : 鹿沼土3 : 軽石2 : くん炭1',
     potSize: 'プレステラ105 (深鉢)',
     imageUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80',

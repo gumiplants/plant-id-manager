@@ -239,19 +239,20 @@ export const App: React.FC = () => {
 
   // 「植え替え完了」ボタンのアクション
   const handleRepotPlant = (targetPlant: Plant) => {
-    const today = new Date().toISOString().split('T')[0];
+    const thisMonth = new Date().toISOString().slice(0, 7);
     const now = new Date().toISOString();
 
-    const existingHistory =
-      targetPlant.repottingHistory || (targetPlant.lastRepottedDate ? [targetPlant.lastRepottedDate] : []);
-    const updatedHistory = Array.from(new Set([today, ...existingHistory])).sort().reverse();
+    const existingHistory = (
+      targetPlant.repottingHistory || (targetPlant.lastRepottedDate ? [targetPlant.lastRepottedDate] : [])
+    ).map((d) => d.slice(0, 7));
+    const updatedHistory = Array.from(new Set([thisMonth, ...existingHistory])).sort().reverse();
 
     setPlants((prev) =>
       prev.map((item) =>
         item.id === targetPlant.id
           ? {
               ...item,
-              lastRepottedDate: today,
+              lastRepottedDate: thisMonth,
               repottingHistory: updatedHistory,
               updatedAt: now,
             }
@@ -264,7 +265,7 @@ export const App: React.FC = () => {
         prev
           ? {
               ...prev,
-              lastRepottedDate: today,
+              lastRepottedDate: thisMonth,
               repottingHistory: updatedHistory,
             }
           : null

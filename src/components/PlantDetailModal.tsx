@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Plant } from '../types/plant';
-import { getDaysSince } from '../utils/storage';
+import { getDaysSince, getMonthsSince, formatYearMonth } from '../utils/storage';
 import { X, Calendar, Edit3, Trash2, Sprout, Clock, Droplet, Box, Copy } from 'lucide-react';
 
 interface PlantDetailModalProps {
@@ -34,8 +34,9 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
   const daysSinceWatered = getDaysSince(plant.lastWateredDate);
   const hasWateredToday = daysSinceWatered === 0 && !!plant.lastWateredDate;
 
-  const daysSinceRepotted = getDaysSince(plant.lastRepottedDate);
-  const hasRepottedToday = daysSinceRepotted === 0 && !!plant.lastRepottedDate;
+  const monthsSinceRepotted = getMonthsSince(plant.lastRepottedDate);
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const hasRepottedThisMonth = !!plant.lastRepottedDate && plant.lastRepottedDate.slice(0, 7) === thisMonth;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
@@ -144,14 +145,14 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
                   type="button"
                   onClick={() => onRepotPlant(plant)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    hasRepottedToday
+                    hasRepottedThisMonth
                       ? 'bg-amber-950/80 text-amber-300 border-amber-700/80'
                       : 'bg-[#291e14] hover:bg-[#382819] text-amber-300 border-amber-800/80 shadow-md'
                   }`}
-                  title="植え替え日を今日に更新して履歴に記録"
+                  title="植え替え年月を今月に更新して履歴に記録"
                 >
                   <Sprout className="w-3.5 h-3.5" />
-                  <span>{hasRepottedToday ? '本日植え替え済' : '植え替え完了'}</span>
+                  <span>{hasRepottedThisMonth ? '今月植え替え済' : '植え替え完了'}</span>
                 </button>
               )}
             </div>
@@ -187,7 +188,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
               <span className="text-[#787a87] block mb-1">植え替えサイクル</span>
               <span className="text-gray-200 font-mono">
                 {plant.lastRepottedDate
-                  ? `前回から ${daysSinceRepotted} 日経過`
+                  ? (monthsSinceRepotted === 0 ? '今月実施' : `前回から ${monthsSinceRepotted} ヶ月経過`)
                   : '未記録'}
               </span>
             </div>
@@ -203,7 +204,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
             <div>
               <span className="text-[#787a87] block mb-1">最終植え替え日</span>
               <span className="font-mono text-gray-200">
-                {plant.lastRepottedDate ? plant.lastRepottedDate.replace(/-/g, '/') : '未記録'}
+                {formatYearMonth(plant.lastRepottedDate)}
               </span>
             </div>
             <div className="col-span-2 sm:col-span-3 pt-1 border-t border-[#25262f]">
@@ -236,7 +237,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
                     key={`${dStr}-${idx}`}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono bg-[#202127] border border-[#32333d] text-gray-200"
                   >
-                    <span>{dStr.replace(/-/g, '/')}</span>
+                    <span>{formatYearMonth(dStr)}</span>
                     {idx === 0 && (
                       <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-sans font-bold">
                         最新

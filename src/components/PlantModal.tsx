@@ -109,8 +109,11 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(existingDraft.lineageOrNursery || '');
       setAcquisitionDate(existingDraft.acquisitionDate || '');
       setLastWateredDate(existingDraft.lastWateredDate || '');
-      setLastRepottedDate(existingDraft.lastRepottedDate || '');
-      setRepottingHistory(existingDraft.repottingHistory || (existingDraft.lastRepottedDate ? [existingDraft.lastRepottedDate] : []));
+      setLastRepottedDate(existingDraft.lastRepottedDate ? existingDraft.lastRepottedDate.slice(0, 7) : '');
+      setRepottingHistory(
+        (existingDraft.repottingHistory || (existingDraft.lastRepottedDate ? [existingDraft.lastRepottedDate] : []))
+          .map((d) => d.slice(0, 7))
+      );
       setSoilMix(existingDraft.soilMix || '');
       setPotSize(existingDraft.potSize || '');
       setImageUrl(existingDraft.imageUrl || '');
@@ -129,8 +132,11 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
       setAcquisitionDate(editingPlant.acquisitionDate || '');
       setLastWateredDate(editingPlant.lastWateredDate || '');
-      setLastRepottedDate(editingPlant.lastRepottedDate || '');
-      setRepottingHistory(editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []));
+      setLastRepottedDate(editingPlant.lastRepottedDate ? editingPlant.lastRepottedDate.slice(0, 7) : '');
+      setRepottingHistory(
+        (editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []))
+          .map((d) => d.slice(0, 7))
+      );
       setSoilMix(editingPlant.soilMix || '');
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
@@ -142,6 +148,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setError(null);
     } else {
       const today = new Date().toISOString().split('T')[0];
+      const thisMonth = today.slice(0, 7);
       const isSeedlingMode = defaultManagementType === 'seedling';
       const autoId = generateNextId(isSeedlingMode ? 'SDL' : 'AGV', allPlants);
       setManagementType(defaultManagementType);
@@ -152,8 +159,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setLineageOrNursery(isSeedlingMode ? 'Koehres種子' : '');
       setAcquisitionDate(today);
       setLastWateredDate(today);
-      setLastRepottedDate(today);
-      setRepottingHistory([today]);
+      setLastRepottedDate(thisMonth);
+      setRepottingHistory([thisMonth]);
       setSoilMix(isSeedlingMode ? '種まき専用微粒子土 : バーミキュライト' : '赤玉土4 : 鹿沼土3 : 軽石3');
       setPotSize(isSeedlingMode ? '実生連結トレイ 24穴' : 'プレステラ90');
       setImageUrl('');
@@ -212,13 +219,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   // 植え替え履歴への追加ハンドラー
   const handleAddRepotDate = (dateToAdd: string) => {
     if (!dateToAdd) return;
+    const formattedMonth = dateToAdd.slice(0, 7);
     const historySet = new Set(repottingHistory);
-    historySet.add(dateToAdd);
+    historySet.add(formattedMonth);
     const sorted = Array.from(historySet).sort().reverse();
     setRepottingHistory(sorted);
     // 最新の日付なら最終植え替え日も更新
-    if (!lastRepottedDate || dateToAdd >= lastRepottedDate) {
-      setLastRepottedDate(dateToAdd);
+    if (!lastRepottedDate || formattedMonth >= lastRepottedDate) {
+      setLastRepottedDate(formattedMonth);
     }
   };
 
@@ -793,21 +801,22 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    const today = new Date().toISOString().split('T')[0];
-                    setLastRepottedDate(today);
-                    handleAddRepotDate(today);
+                    const thisMonth = new Date().toISOString().slice(0, 7);
+                    setLastRepottedDate(thisMonth);
+                    handleAddRepotDate(thisMonth);
                   }}
                   className="text-[10px] text-amber-400 hover:underline cursor-pointer"
                 >
-                  今日にする
+                  今月にする
                 </button>
               </div>
               <input
-                type="date"
-                value={lastRepottedDate}
+                type="month"
+                value={lastRepottedDate ? lastRepottedDate.slice(0, 7) : ''}
                 onChange={(e) => {
-                  setLastRepottedDate(e.target.value);
-                  if (e.target.value) handleAddRepotDate(e.target.value);
+                  const val = e.target.value;
+                  setLastRepottedDate(val);
+                  if (val) handleAddRepotDate(val);
                 }}
                 className="w-full px-3 py-2 text-xs sm:text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
               />
@@ -825,14 +834,17 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               </label>
               <div className="flex items-center gap-1.5">
                 <input
-                  type="date"
+                  type="month"
                   value={newRepotDate}
                   onChange={(e) => setNewRepotDate(e.target.value)}
                   className="px-2 py-1 text-xs bg-[#202126] border border-[#353640] rounded-lg text-gray-200 focus:outline-none focus:border-amber-400"
                 />
                 <button
                   type="button"
-                  onClick={() => handleAddRepotDate(newRepotDate)}
+                  onClick={() => {
+                    handleAddRepotDate(newRepotDate);
+                    setNewRepotDate('');
+                  }}
                   disabled={!newRepotDate}
                   className="px-2.5 py-1 text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg transition-colors disabled:opacity-40 cursor-pointer"
                 >
@@ -843,27 +855,30 @@ export const PlantModal: React.FC<PlantModalProps> = ({
 
             {repottingHistory.length > 0 ? (
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                {repottingHistory.map((dateStr) => (
-                  <span
-                    key={dateStr}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-[#212228] text-gray-200 border border-[#32343e]"
-                  >
-                    <span>{dateStr.replace(/-/g, '/')}</span>
-                    {dateStr === lastRepottedDate && (
-                      <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-sans font-bold">
-                        最新
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRepotDate(dateStr)}
-                      className="text-gray-400 hover:text-red-400 ml-0.5 cursor-pointer leading-none text-sm"
-                      title="この履歴を削除"
+                {repottingHistory.map((dateStr) => {
+                  const ym = dateStr.slice(0, 7);
+                  return (
+                    <span
+                      key={dateStr}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-[#212228] text-gray-200 border border-[#32343e]"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      <span>{ym.replace(/-/g, '/')}</span>
+                      {ym === (lastRepottedDate ? lastRepottedDate.slice(0, 7) : '') && (
+                        <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-sans font-bold">
+                          最新
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRepotDate(dateStr)}
+                        className="text-gray-400 hover:text-red-400 ml-0.5 cursor-pointer leading-none text-sm"
+                        title="この履歴を削除"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-[11px] text-gray-500 italic">植え替え履歴はまだ記録されていません</p>

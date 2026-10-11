@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Plant, GridSize, Theme } from '../types/plant';
-import { getDaysSince } from '../utils/storage';
+import { getDaysSince, getMonthsSince, formatYearMonth } from '../utils/storage';
 import { Droplet, Edit3, Trash2, Sprout, Box, Copy } from 'lucide-react';
 
 interface NanoPlantGridProps {
@@ -237,10 +237,10 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                       <p className="flex items-center gap-1 text-[11px]">
                         <span>植え替え:</span>
                         <span className={`font-mono ${isDark ? 'text-amber-300' : 'text-amber-800 font-medium'}`}>
-                          {plant.lastRepottedDate.replace(/-/g, '/')}
+                          {formatYearMonth(plant.lastRepottedDate)}
                         </span>
                         <span className="text-[10px] opacity-80">
-                          ({getDaysSince(plant.lastRepottedDate)}日前)
+                          ({getMonthsSince(plant.lastRepottedDate) === 0 ? '今月' : `${getMonthsSince(plant.lastRepottedDate)}ヶ月前`})
                         </span>
                       </p>
                     )}
