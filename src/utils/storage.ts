@@ -489,3 +489,28 @@ export const saveStoredSoilMix = (soilMix: string): void => {
     console.error('用土配合の保存失敗:', e);
   }
 };
+
+const LINEAGE_STORAGE_KEY = 'plant_id_manager_custom_lineages';
+
+// ユーザーが入力した血統・ナーセリー名履歴を取得
+export const getStoredLineages = (): string[] => {
+  try {
+    const raw = localStorage.getItem(LINEAGE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+// 新しい血統・ナーセリー名を履歴に保存
+export const saveStoredLineage = (lineage: string): void => {
+  const trimmed = lineage.trim();
+  if (!trimmed) return;
+  try {
+    const existing = getStoredLineages();
+    const updated = Array.from(new Set([trimmed, ...existing])).slice(0, 30);
+    localStorage.setItem(LINEAGE_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('血統・ナーセリー名の保存失敗:', e);
+  }
+};

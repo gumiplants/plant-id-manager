@@ -9,6 +9,8 @@ import {
   saveStoredPotSize,
   getStoredSoilMixes,
   saveStoredSoilMix,
+  getStoredLineages,
+  saveStoredLineage,
 } from '../utils/storage';
 import {
   X,
@@ -54,6 +56,17 @@ const COMMON_SOIL_PRESETS = [
   '種まき専用微粒子土 : バーミキュライト',
   '赤玉土微粒8 : 鹿沼土微粒2 (熱湯消毒)',
   '市販 多肉・サボテン専用土',
+];
+
+const COMMON_LINEAGE_PRESETS = [
+  '台湾株選抜',
+  '台湾 Lize Gardner産',
+  'マダガスカル現地球・発根済',
+  '国内実生選抜株',
+  '山城愛仙園',
+  'ドイツ Koehres種子',
+  '自家採取種子',
+  '現地球カキ仔',
 ];
 
 export const PlantModal: React.FC<PlantModalProps> = ({
@@ -111,6 +124,16 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       .map((p) => p.soilMix?.trim())
       .filter((s): s is string => !!s);
     const combined = Array.from(new Set([...custom, ...fromPlants, ...COMMON_SOIL_PRESETS]));
+    return combined.filter(Boolean);
+  }, [allPlants, isOpen]);
+
+  // 血統・ナーセリー名の候補一覧（ユーザー入力履歴 + 登録済み全株データ + デフォルト）
+  const availableLineages = useMemo(() => {
+    const custom = getStoredLineages();
+    const fromPlants = allPlants
+      .map((p) => p.lineageOrNursery?.trim())
+      .filter((s): s is string => !!s);
+    const combined = Array.from(new Set([...custom, ...fromPlants, ...COMMON_LINEAGE_PRESETS]));
     return combined.filter(Boolean);
   }, [allPlants, isOpen]);
 
@@ -393,12 +416,15 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       )
     ).sort().reverse();
 
-    // ユーザー独自の鉢・サイズや用土配合を次回候補として記録
+    // ユーザー独自の鉢・サイズ、用土配合、血統・ナーセリー名を次回候補として記録
     if (potSize.trim()) {
       saveStoredPotSize(potSize.trim());
     }
     if (soilMix.trim()) {
       saveStoredSoilMix(soilMix.trim());
+    }
+    if (lineageOrNursery.trim()) {
+      saveStoredLineage(lineageOrNursery.trim());
     }
 
     onSave({
@@ -938,11 +964,38 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               </label>
               <input
                 type="text"
+                list="lineage-suggestions"
                 value={lineageOrNursery}
                 onChange={(e) => setLineageOrNursery(e.target.value)}
                 placeholder={managementType === 'seedling' ? '例: ドイツ Koehres種子、自家採取' : '例: 台湾株、現地球発根済、山城愛仙園'}
                 className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
               />
+              <datalist id="lineage-suggestions">
+                {availableLineages.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+              {availableLineages.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5 max-h-20 overflow-y-auto">
+                  {availableLineages.slice(0, 8).map((item) => {
+                    const isSelected = lineageOrNursery === item;
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setLineageOrNursery(item)}
+                        className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-950/70 text-amber-300 border-amber-600/80 font-medium'
+                            : 'bg-[#27282f] hover:bg-[#32343d] text-gray-300 border-[#373944]'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
