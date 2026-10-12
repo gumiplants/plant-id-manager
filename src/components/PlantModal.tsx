@@ -131,7 +131,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setJapaneseName(existingDraft.japaneseName || '');
       setCategory(existingDraft.category || 'agave');
       setLineageOrNursery(existingDraft.lineageOrNursery || '');
-      setAcquisitionDate(existingDraft.acquisitionDate || '');
+      setAcquisitionDate(existingDraft.acquisitionDate ? existingDraft.acquisitionDate.slice(0, 7) : '');
       setLastWateredDate(existingDraft.lastWateredDate || '');
       setLastRepottedDate(existingDraft.lastRepottedDate ? existingDraft.lastRepottedDate.slice(0, 7) : '');
       setRepottingHistory(
@@ -154,7 +154,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setJapaneseName(editingPlant.japaneseName || '');
       setCategory(editingPlant.category || 'agave');
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
-      setAcquisitionDate(editingPlant.acquisitionDate || '');
+      setAcquisitionDate(editingPlant.acquisitionDate ? editingPlant.acquisitionDate.slice(0, 7) : '');
       setLastWateredDate(editingPlant.lastWateredDate || '');
       setLastRepottedDate(editingPlant.lastRepottedDate ? editingPlant.lastRepottedDate.slice(0, 7) : '');
       setRepottingHistory(
@@ -181,7 +181,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setJapaneseName('');
       setCategory(isSeedlingMode ? 'caudex' : 'agave');
       setLineageOrNursery(isSeedlingMode ? 'Koehres種子' : '');
-      setAcquisitionDate(today);
+      setAcquisitionDate(thisMonth);
       setLastWateredDate(today);
       setLastRepottedDate(thisMonth);
       setRepottingHistory([thisMonth]);
@@ -316,26 +316,30 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setJapaneseName(editingPlant.japaneseName || '');
       setCategory(editingPlant.category || 'agave');
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
-      setAcquisitionDate(editingPlant.acquisitionDate || '');
+      setAcquisitionDate(editingPlant.acquisitionDate ? editingPlant.acquisitionDate.slice(0, 7) : '');
       setLastWateredDate(editingPlant.lastWateredDate || '');
-      setLastRepottedDate(editingPlant.lastRepottedDate || '');
-      setRepottingHistory(editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []));
+      setLastRepottedDate(editingPlant.lastRepottedDate ? editingPlant.lastRepottedDate.slice(0, 7) : '');
+      setRepottingHistory(
+        (editingPlant.repottingHistory || (editingPlant.lastRepottedDate ? [editingPlant.lastRepottedDate] : []))
+          .map((d) => d.slice(0, 7))
+      );
       setSoilMix(editingPlant.soilMix || '');
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
       setNotes(editingPlant.notes || '');
     } else {
       const today = new Date().toISOString().split('T')[0];
+      const thisMonth = today.slice(0, 7);
       const autoId = generateNextId('AGV', allPlants);
       setId(autoId);
       setName('');
       setJapaneseName('');
       setCategory('agave');
       setLineageOrNursery('');
-      setAcquisitionDate(today);
+      setAcquisitionDate(thisMonth);
       setLastWateredDate(today);
-      setLastRepottedDate(today);
-      setRepottingHistory([today]);
+      setLastRepottedDate(thisMonth);
+      setRepottingHistory([thisMonth]);
       setSoilMix('赤玉土4 : 鹿沼土3 : 軽石3');
       setPotSize('プレステラ90');
       setImageUrl('');
@@ -795,12 +799,21 @@ export const PlantModal: React.FC<PlantModalProps> = ({
           {/* 入手日/播種日 ＆ 最終水やり日 ＆ 最終植え替え日 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                {managementType === 'seedling' ? '播種日 (種まき日)' : '入手日'}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-300">
+                  {managementType === 'seedling' ? '播種年月 (種まき)' : '入手年月'}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setAcquisitionDate(new Date().toISOString().slice(0, 7))}
+                  className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+                >
+                  今月にする
+                </button>
+              </div>
               <input
-                type="date"
-                value={acquisitionDate}
+                type="month"
+                value={acquisitionDate ? acquisitionDate.slice(0, 7) : ''}
                 onChange={(e) => setAcquisitionDate(e.target.value)}
                 className="w-full px-3 py-2 text-xs sm:text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 focus:outline-none focus:border-amber-400"
               />

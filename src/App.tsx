@@ -204,7 +204,7 @@ export const App: React.FC = () => {
       ...sourcePlant,
       id: nextId,
       name: `${sourcePlant.name} (複製)`,
-      acquisitionDate: today,
+      acquisitionDate: sourcePlant.acquisitionDate ? sourcePlant.acquisitionDate.slice(0, 7) : today.slice(0, 7),
       lastWateredDate: today,
       createdAt: now,
       updatedAt: now,

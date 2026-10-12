@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Plant } from '../types/plant';
+import { formatYearMonth } from '../utils/storage';
 import { Edit3, Trash2, Calendar, Tag, Box, Info } from 'lucide-react';
 
 interface PlantCardListProps {
@@ -70,17 +71,17 @@ export const PlantCardList: React.FC<PlantCardListProps> = ({
               <div className="h-4 mb-3" />
             )}
 
-            {/* 基本ステータス（入手日・鉢サイズ） */}
+            {/* 基本ステータス（入手年月・鉢・サイズ） */}
             <div className="space-y-1.5 py-2.5 border-t border-b border-gray-700/60 text-xs">
               <div className="flex items-center justify-between text-gray-300">
                 <span className="text-gray-400 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-gray-500" /> 入手日:
+                  <Calendar className="w-3.5 h-3.5 text-gray-500" /> 入手年月:
                 </span>
-                <span className="font-mono">{plant.acquisitionDate || '未記録'}</span>
+                <span className="font-mono">{formatYearMonth(plant.acquisitionDate)}</span>
               </div>
               <div className="flex items-center justify-between text-gray-300">
                 <span className="text-gray-400 flex items-center gap-1">
-                  <Box className="w-3.5 h-3.5 text-gray-500" /> 鉢サイズ:
+                  <Box className="w-3.5 h-3.5 text-gray-500" /> 鉢・サイズ:
                 </span>
                 <span className="font-medium text-emerald-300/90">{plant.potSize || '未記録'}</span>
               </div>

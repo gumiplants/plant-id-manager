@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Plant, Theme } from '../types/plant';
+import { formatYearMonth } from '../utils/storage';
 import { Edit3, Trash2, Eye, Calendar } from 'lucide-react';
 
 interface PlantTableProps {
@@ -50,7 +51,7 @@ export const PlantTable: React.FC<PlantTableProps> = ({
               血統 / 種子元
             </th>
             <th scope="col" className="px-4 py-3.5 font-semibold">
-              入手日 / 播種日
+              入手 / 播種年月
             </th>
             <th scope="col" className="px-4 py-3.5 font-semibold">
               鉢 / トレイ
@@ -137,12 +138,12 @@ export const PlantTable: React.FC<PlantTableProps> = ({
                 )}
               </td>
 
-              {/* 入手日 */}
+              {/* 入手年月 */}
               <td className={`px-4 py-3 whitespace-nowrap text-xs font-mono ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
                 {plant.acquisitionDate ? (
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    {plant.acquisitionDate}
+                    {formatYearMonth(plant.acquisitionDate)}
                   </span>
                 ) : (
                   <span className="text-gray-400">—</span>

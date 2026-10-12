@@ -211,9 +211,9 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                 <div className={`mt-4 pt-3 border-t flex items-end justify-between gap-2 ${isDark ? 'border-[#2d2e36]' : 'border-stone-200'}`}>
                   <div className={`space-y-0.5 text-xs ${isDark ? 'text-[#8e909d]' : 'text-stone-500'}`}>
                     <p className="flex items-center gap-1">
-                      <span>{plant.managementType === 'seedling' ? '播種日' : '入手日'}</span>
+                      <span>{plant.managementType === 'seedling' ? '播種:' : '入手:'}</span>
                       <span className={`font-mono ${isDark ? 'text-gray-200' : 'text-stone-800 font-medium'}`}>
-                        {plant.acquisitionDate ? plant.acquisitionDate.replace(/-/g, '/') : '未記録'}
+                        {formatYearMonth(plant.acquisitionDate)}
                       </span>
                     </p>
                     <p>
@@ -347,9 +347,9 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                   {/* 入手日/播種日 & 水やり経過 */}
                   <div className="mt-1 space-y-0.5 text-[10px]">
                     <p className={`flex items-center gap-1 ${isDark ? 'text-[#8e909d]' : 'text-stone-500'}`}>
-                      <span>{plant.managementType === 'seedling' ? '播種日' : '入手日'}</span>
+                      <span>{plant.managementType === 'seedling' ? '播種:' : '入手:'}</span>
                       <span className={`font-mono ${isDark ? 'text-gray-300' : 'text-stone-800 font-medium'}`}>
-                        {plant.acquisitionDate ? plant.acquisitionDate.replace(/-/g, '/') : '未記録'}
+                        {formatYearMonth(plant.acquisitionDate)}
                       </span>
                     </p>
 
@@ -546,9 +546,9 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
               <div className={`mt-3 pt-2.5 border-t flex items-end justify-between gap-2 ${isDark ? 'border-[#2d2e36]' : 'border-stone-200'}`}>
                 <div className={`space-y-0.5 text-xs ${isDark ? 'text-[#8e909d]' : 'text-stone-500'}`}>
                   <p className="flex items-center gap-1 text-[11px]">
-                    <span>{plant.managementType === 'seedling' ? '播種日' : '入手日'}</span>
+                    <span>{plant.managementType === 'seedling' ? '播種:' : '入手:'}</span>
                     <span className={`font-mono ${isDark ? 'text-gray-300' : 'text-stone-800 font-medium'}`}>
-                      {plant.acquisitionDate ? plant.acquisitionDate.replace(/-/g, '/') : '未記録'}
+                      {formatYearMonth(plant.acquisitionDate)}
                     </span>
                   </p>
                   <p className="text-[11px]">

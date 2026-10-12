@@ -24,13 +24,7 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
 }) => {
   if (!plant) return null;
 
-  const getDaysElapsed = (dateStr: string) => {
-    if (!dateStr) return null;
-    const diffTime = Math.abs(new Date().getTime() - new Date(dateStr).getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const daysElapsed = getDaysElapsed(plant.acquisitionDate);
+  const monthsSinceAcquired = plant.acquisitionDate ? getMonthsSince(plant.acquisitionDate) : null;
   const daysSinceWatered = getDaysSince(plant.lastWateredDate);
   const hasWateredToday = daysSinceWatered === 0 && !!plant.lastWateredDate;
 
@@ -162,11 +156,11 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-[#17181c] border border-[#2c2d36] rounded-xl text-xs">
             <div>
               <span className="text-[#787a87] block mb-1">
-                {plant.managementType === 'seedling' ? '播種日 (種まき)' : '入手日'}
+                {plant.managementType === 'seedling' ? '播種年月 (種まき)' : '入手年月'}
               </span>
               <span className="font-mono text-gray-200 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                {plant.acquisitionDate || '未記録'}
+                {formatYearMonth(plant.acquisitionDate)}
               </span>
             </div>
             <div>
@@ -175,7 +169,13 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
               </span>
               <span className="font-mono text-gray-200 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#fbbf24]" />
-                {daysElapsed !== null ? `${daysElapsed} 日目` : '—'}
+                {monthsSinceAcquired !== null
+                  ? monthsSinceAcquired === 0
+                    ? '今月 (1ヶ月目)'
+                    : monthsSinceAcquired >= 12
+                    ? `${Math.floor(monthsSinceAcquired / 12)}年${monthsSinceAcquired % 12 > 0 ? ` ${monthsSinceAcquired % 12}ヶ月` : ''} 経過`
+                    : `${monthsSinceAcquired} ヶ月経過`
+                  : '—'}
               </span>
             </div>
             <div>
