@@ -13,7 +13,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ plants }) => {
   ).length;
 
   const pachyCount = plants.filter(
-    (p) => p.id.startsWith('PAC') || p.name.includes('パキポ') || p.name.includes('グラキリス')
+    (p) => p.id.startsWith('CDX') || p.id.startsWith('PAC') || p.name.includes('パキポ') || p.name.includes('グラキリス')
   ).length;
 
   const cactusCount = plants.filter(

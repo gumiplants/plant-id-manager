@@ -58,7 +58,7 @@ export const INITIAL_PLANTS: Plant[] = [
     updatedAt: '2026-05-10T10:00:00.000Z',
   },
   {
-    id: 'PAC-001',
+    id: 'CDX-001',
     name: 'Pachypodium gracilius',
     japaneseName: 'パキポディウム・グラキリス (象牙宮)',
     category: 'caudex',
@@ -118,7 +118,7 @@ export const INITIAL_PLANTS: Plant[] = [
     updatedAt: '2026-06-15T09:00:00.000Z',
   },
   {
-    id: 'PAC-002',
+    id: 'CDX-002',
     name: 'Pachypodium brevicaule',
     japaneseName: '恵比寿笑い (ブレビカウレ)',
     category: 'caudex',
@@ -188,7 +188,7 @@ export const loadPlantsFromStorage = (): Plant[] => {
             const migrated = oldParsed.map((p: any) => ({
               ...p,
               managementType: p.managementType || (p.id.startsWith('SDL') || p.name.includes('実生') ? 'seedling' : 'normal'),
-              category: p.category || (p.name.includes('アガベ') || p.id.startsWith('AGV') ? 'agave' : p.name.includes('パキポ') || p.id.startsWith('PAC') ? 'caudex' : 'cactus'),
+              category: p.category || (p.name.includes('アガベ') || p.id.startsWith('AGV') ? 'agave' : p.name.includes('パキポ') || p.id.startsWith('CDX') || p.id.startsWith('PAC') ? 'caudex' : 'cactus'),
               lastWateredDate: p.lastWateredDate || new Date().toISOString().split('T')[0],
               imageUrl: p.imageUrl || INITIAL_PLANTS[0].imageUrl,
             }));

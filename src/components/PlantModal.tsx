@@ -768,10 +768,10 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleAutoId('PAC', 'caudex')}
+                  onClick={() => handleAutoId('CDX', 'caudex')}
                   className="px-2 py-0.5 rounded bg-[#2b2c33] hover:bg-[#353740] hover:text-amber-400 border border-[#3b3d47] text-[11px] transition-colors cursor-pointer"
                 >
-                  PAC (塊根)
+                  CDX (塊根)
                 </button>
                 <button
                   type="button"
@@ -786,7 +786,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               type="text"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              placeholder={managementType === 'seedling' ? '例: SDL-001, PAC-SD-001' : '例: AGV-001, PAC-002'}
+              placeholder={managementType === 'seedling' ? '例: SDL-001, CDX-SD-001' : '例: AGV-001, CDX-002'}
               className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400 font-mono"
               required
             />

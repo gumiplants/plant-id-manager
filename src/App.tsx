@@ -182,7 +182,7 @@ export const App: React.FC = () => {
           prefix = 'AGV';
           break;
         case 'caudex':
-          prefix = 'PAC';
+          prefix = 'CDX';
           break;
         case 'shrub':
           prefix = 'SHR';
@@ -313,7 +313,7 @@ export const App: React.FC = () => {
           if (activeCategory === 'agave' && !(plant.id.startsWith('AGV') || plant.name.toLowerCase().includes('agave') || plant.name.includes('アガベ'))) {
             return false;
           }
-          if (activeCategory === 'caudex' && !(plant.id.startsWith('PAC') || plant.name.toLowerCase().includes('pachy') || plant.name.includes('パキポ') || plant.name.includes('グラキリス'))) {
+          if (activeCategory === 'caudex' && !(plant.id.startsWith('CDX') || plant.id.startsWith('PAC') || plant.name.toLowerCase().includes('pachy') || plant.name.includes('パキポ') || plant.name.includes('グラキリス'))) {
             return false;
           }
           if (activeCategory === 'shrub' && !(plant.id.startsWith('SHR') || plant.id.startsWith('COM') || plant.id.startsWith('BOS') || plant.name.toLowerCase().includes('commiphora') || plant.name.toLowerCase().includes('boswellia') || plant.name.includes('灌木') || plant.name.includes('コミフォラ') || plant.name.includes('ボスウェリア') || plant.name.includes('ブルセラ'))) {
