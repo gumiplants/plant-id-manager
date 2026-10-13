@@ -302,7 +302,7 @@ export const App: React.FC = () => {
 
     const filtered = plants.filter((plant) => {
       // 1. 管理区分（通常株 vs 実生苗）で分ける
-      const plantType = plant.managementType || 'normal';
+      const plantType = plant.managementType === 'seedling' ? 'seedling' : 'normal';
       if (plantType !== managementType) {
         return false;
       }
@@ -367,7 +367,7 @@ export const App: React.FC = () => {
   const isDark = theme === 'dark';
 
   const currentTypeTotalCount = plants.filter(
-    (p) => (p.managementType || 'normal') === managementType
+    (p) => (p.managementType === 'seedling' ? 'seedling' : 'normal') === managementType
   ).length;
 
   return (

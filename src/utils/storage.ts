@@ -206,7 +206,7 @@ export const loadPlantsFromStorage = (): Plant[] => {
       // 既存データの managementType が未指定なら normal に補完、もし実生が0件なら INITIAL_PLANTS の実生データをマージ
       let hasSeedlings = false;
       const normalized = parsed.map((p: any) => {
-        const type = p.managementType || (p.id.startsWith('SDL') || p.name.includes('実生') ? 'seedling' : 'normal');
+        const type = p.managementType === 'seedling' || p.id.startsWith('SDL') ? 'seedling' : 'normal';
         if (type === 'seedling') hasSeedlings = true;
         return {
           ...p,

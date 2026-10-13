@@ -42,7 +42,7 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
 
   const isDark = theme === 'dark';
 
-  const normalCount = plants.filter((p) => (p.managementType || 'normal') === 'normal').length;
+  const normalCount = plants.filter((p) => p.managementType !== 'seedling').length;
   const seedlingCount = plants.filter((p) => p.managementType === 'seedling').length;
 
   const handleSaveClick = () => {
