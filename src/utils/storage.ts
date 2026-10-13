@@ -1,4 +1,4 @@
-import type { Plant } from '../types/plant';
+import type { Plant, ManagementType } from '../types/plant';
 
 const STORAGE_KEY = 'plant_id_manager_plants_v2';
 const DRAFT_PREFIX = 'plant_form_draft_';
@@ -259,12 +259,31 @@ export const generateNextId = (prefix: string, plants: Plant[]): string => {
   return `${cleanPrefix}-${padded}`;
 };
 
+// 子株(カキ仔)用の管理ID自動採番ヘルパー (例: AGV-001-P1, AGV-001-P2)
+export const generatePupId = (parentId: string, plants: Plant[]): string => {
+  const cleanParentId = parentId.trim().toUpperCase();
+  const pattern = new RegExp(`^${cleanParentId}-P(\\d+)$`, 'i');
+  let maxNum = 0;
+
+  for (const plant of plants) {
+    const match = plant.id.match(pattern);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  return `${cleanParentId}-P${maxNum + 1}`;
+};
+
 export interface PlantDraft {
   id: string;
   name: string;
   japaneseName?: string;
   category: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'other';
-  managementType?: 'normal' | 'seedling';
+  managementType?: ManagementType;
   lineageOrNursery: string;
   acquisitionDate: string;
   lastWateredDate?: string;
@@ -278,6 +297,9 @@ export interface PlantDraft {
   sowingDate?: string;
   seedCount?: number;
   germinationCount?: number;
+  parentPlantId?: string;
+  parentPlantName?: string;
+  harvestDate?: string;
   savedAt: string;
 }
 

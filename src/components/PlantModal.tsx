@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { Plant, ManagementType } from '../types/plant';
 import {
   generateNextId,
+  generatePupId,
   saveFormDraft,
   loadFormDraft,
   clearFormDraft,
@@ -25,6 +26,7 @@ import {
   Sprout,
   Trees,
   Copy,
+  Scissors,
 } from 'lucide-react';
 
 interface PlantModalProps {
@@ -35,6 +37,7 @@ interface PlantModalProps {
   allPlants: Plant[];
   defaultManagementType?: ManagementType;
   isDuplicate?: boolean;
+  initialParentPlant?: Plant | null;
 }
 
 const COMMON_POT_SIZES = [
@@ -77,6 +80,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   allPlants,
   defaultManagementType = 'normal',
   isDuplicate = false,
+  initialParentPlant = null,
 }) => {
   const [managementType, setManagementType] = useState<ManagementType>(defaultManagementType);
   const [id, setId] = useState('');
@@ -93,6 +97,10 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const [potSize, setPotSize] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [notes, setNotes] = useState('');
+  // 子株（カキ仔）専用項目
+  const [parentPlantId, setParentPlantId] = useState('');
+  const [parentPlantName, setParentPlantName] = useState('');
+  const [harvestDate, setHarvestDate] = useState('');
   // 実生苗専用項目
   const [seedCount, setSeedCount] = useState<string>('');
   const [germinationCount, setGerminationCount] = useState<string>('');
@@ -104,7 +112,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const draftKey = editingPlant ? `edit_${editingPlant.id}` : 'new';
+  const draftKey = editingPlant ? `edit_${editingPlant.id}` : initialParentPlant ? `pup_${initialParentPlant.id}` : 'new';
   const autoSaveTimerRef = useRef<number | null>(null);
 
   // 鉢・サイズの候補一覧（ユーザー入力履歴 + 登録済み全株データ + デフォルト）
@@ -165,6 +173,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPotSize(existingDraft.potSize || '');
       setImageUrl(existingDraft.imageUrl || '');
       setNotes(existingDraft.notes || '');
+      setParentPlantId(existingDraft.parentPlantId || '');
+      setParentPlantName(existingDraft.parentPlantName || '');
+      setHarvestDate(existingDraft.harvestDate ? existingDraft.harvestDate.slice(0, 7) : '');
       setSeedCount(existingDraft.seedCount !== undefined ? String(existingDraft.seedCount) : '');
       setGerminationCount(existingDraft.germinationCount !== undefined ? String(existingDraft.germinationCount) : '');
       setHasRestoredDraft(true);
@@ -188,8 +199,42 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
       setNotes(editingPlant.notes || '');
+      setParentPlantId(editingPlant.parentPlantId || '');
+      setParentPlantName(editingPlant.parentPlantName || '');
+      setHarvestDate(editingPlant.harvestDate ? editingPlant.harvestDate.slice(0, 7) : '');
       setSeedCount(editingPlant.seedCount !== undefined ? String(editingPlant.seedCount) : '');
       setGerminationCount(editingPlant.germinationCount !== undefined ? String(editingPlant.germinationCount) : '');
+      setHasRestoredDraft(false);
+      setDraftSavedAt(null);
+      setError(null);
+    } else if (initialParentPlant) {
+      // 親株から子株を登録する場合
+      const today = new Date().toISOString().split('T')[0];
+      const thisMonth = today.slice(0, 7);
+      const pupId = generatePupId(initialParentPlant.id, allPlants);
+      setManagementType('pup');
+      setId(pupId);
+      setName(`${initialParentPlant.name} (カキ仔)`);
+      setJapaneseName(initialParentPlant.japaneseName || '');
+      setCategory(initialParentPlant.category);
+      setLineageOrNursery(
+        initialParentPlant.lineageOrNursery
+          ? `${initialParentPlant.lineageOrNursery} (カキ仔)`
+          : `${initialParentPlant.name} カキ仔`
+      );
+      setAcquisitionDate(thisMonth);
+      setLastWateredDate(today);
+      setLastRepottedDate(thisMonth);
+      setRepottingHistory([thisMonth]);
+      setSoilMix(initialParentPlant.soilMix || '赤玉土4 : 鹿沼土3 : 軽石3');
+      setPotSize('プレステラ90');
+      setImageUrl('');
+      setNotes(`親株: ${initialParentPlant.id} (${initialParentPlant.name}) から採取`);
+      setParentPlantId(initialParentPlant.id);
+      setParentPlantName(initialParentPlant.name);
+      setHarvestDate(thisMonth);
+      setSeedCount('');
+      setGerminationCount('');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
       setError(null);
@@ -212,13 +257,16 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPotSize(isSeedlingMode ? '実生連結トレイ 24穴' : 'プレステラ90');
       setImageUrl('');
       setNotes('');
+      setParentPlantId('');
+      setParentPlantName('');
+      setHarvestDate('');
       setSeedCount('');
       setGerminationCount('');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
       setError(null);
     }
-  }, [editingPlant, isOpen, allPlants, draftKey, defaultManagementType]);
+  }, [editingPlant, initialParentPlant, isOpen, allPlants, draftKey, defaultManagementType]);
 
   // 手動「保存」・下書き保存ハンドラー
   const handleSaveDraft = useCallback(
@@ -238,6 +286,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         potSize,
         imageUrl,
         notes,
+        parentPlantId,
+        parentPlantName,
+        harvestDate,
         sowingDate: acquisitionDate,
         seedCount: seedCount ? parseInt(seedCount, 10) : undefined,
         germinationCount: germinationCount ? parseInt(germinationCount, 10) : undefined,
@@ -260,7 +311,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         setSavedNotice(null);
       }, 3000);
     },
-    [draftKey, id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, lastRepottedDate, repottingHistory, soilMix, potSize, imageUrl, notes]
+    [draftKey, id, name, japaneseName, category, managementType, lineageOrNursery, acquisitionDate, lastWateredDate, lastRepottedDate, repottingHistory, soilMix, potSize, imageUrl, notes, parentPlantId, parentPlantName, harvestDate, seedCount, germinationCount]
   );
 
   // 植え替え履歴への追加ハンドラー
@@ -294,7 +345,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       window.clearTimeout(autoSaveTimerRef.current);
     }
 
-    if (name || id || notes || lineageOrNursery) {
+    if (name || id || notes || lineageOrNursery || parentPlantId) {
       autoSaveTimerRef.current = window.setTimeout(() => {
         handleSaveDraft(false);
       }, 1200);
@@ -305,7 +356,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         window.clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, soilMix, potSize, imageUrl, notes, isOpen, handleSaveDraft]);
+  }, [id, name, japaneseName, category, managementType, lineageOrNursery, acquisitionDate, lastWateredDate, soilMix, potSize, imageUrl, notes, parentPlantId, parentPlantName, harvestDate, isOpen, handleSaveDraft]);
 
   // 写真ファイル選択ハンドラー (Base64)
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,6 +401,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPotSize(editingPlant.potSize || '');
       setImageUrl(editingPlant.imageUrl || '');
       setNotes(editingPlant.notes || '');
+      setParentPlantId(editingPlant.parentPlantId || '');
+      setParentPlantName(editingPlant.parentPlantName || '');
+      setHarvestDate(editingPlant.harvestDate ? editingPlant.harvestDate.slice(0, 7) : '');
     } else {
       const today = new Date().toISOString().split('T')[0];
       const thisMonth = today.slice(0, 7);
@@ -367,6 +421,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPotSize('プレステラ90');
       setImageUrl('');
       setNotes('');
+      setParentPlantId('');
+      setParentPlantName('');
+      setHarvestDate('');
     }
     setError(null);
   };
@@ -442,6 +499,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       potSize: potSize.trim(),
       imageUrl: imageUrl.trim(),
       notes: notes.trim(),
+      parentPlantId: parentPlantId.trim() || undefined,
+      parentPlantName: parentPlantName.trim() || undefined,
+      harvestDate: harvestDate ? harvestDate.slice(0, 7) : undefined,
       sowingDate: acquisitionDate,
       seedCount: !isNaN(Number(parsedSeedCount)) ? parsedSeedCount : undefined,
       germinationCount: !isNaN(Number(parsedGerminationCount)) ? parsedGerminationCount : undefined,
@@ -465,6 +525,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     ? `${editingPlant?.name} をコピーして新規登録`
                     : editingPlant
                     ? `${editingPlant.name} の編集`
+                    : managementType === 'pup'
+                    ? '新しい子株 (カキ仔) を登録'
                     : managementType === 'seedling'
                     ? '新しい実生苗（種まき）を登録'
                     : '新しい株を登録'}
@@ -486,6 +548,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                   ? `新しい管理ID: ${id} として複製登録します`
                   : editingPlant
                   ? `管理ID: ${editingPlant.id} の情報を更新します`
+                  : managementType === 'pup'
+                  ? '親株から採取・胴切り増殖した子株 (カキ仔) を管理します'
                   : managementType === 'seedling'
                   ? '播種日や種子元、発芽数を記録して実生育成を管理します'
                   : 'gumi_plants BOTANICAL LOG に新しい株を追加します'}
@@ -555,28 +619,48 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </div>
           )}
 
-          {/* 管理区分トグル（通常株 vs 実生苗） */}
+          {/* 管理区分トグル（通常株 vs 子株 vs 実生苗） */}
           <div className="bg-[#17181c] border border-[#2b2c34] rounded-xl p-2">
             <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 px-1">
               管理区分
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setManagementType('normal');
-                  if (!editingPlant && id.startsWith('SDL')) {
+                  if (!editingPlant && (id.startsWith('SDL') || id.includes('-P'))) {
                     handleAutoId('AGV', 'agave');
                   }
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                className={`py-2 px-2 sm:px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                   managementType === 'normal'
                     ? 'bg-[#292b34] text-[#fbbf24] border-[#fbbf24]/50 shadow-md'
                     : 'bg-[#1b1c21] text-gray-400 border-[#282931] hover:text-gray-200 hover:bg-[#22232a]'
                 }`}
               >
-                <Trees className="w-4 h-4" />
-                <span>通常株 (コレクション)</span>
+                <Trees className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">通常株</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setManagementType('pup');
+                  if (!editingPlant && (id.startsWith('SDL') || !id.includes('-P'))) {
+                    if (parentPlantId) {
+                      setId(generatePupId(parentPlantId, allPlants));
+                    }
+                  }
+                }}
+                className={`py-2 px-2 sm:px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+                  managementType === 'pup'
+                    ? 'bg-[#2d2213] text-[#fbbf24] border-[#fbbf24]/50 shadow-md'
+                    : 'bg-[#1b1c21] text-gray-400 border-[#282931] hover:text-[#fbbf24] hover:bg-[#22232a]'
+                }`}
+              >
+                <Scissors className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span className="truncate">子株 (カキ仔)</span>
               </button>
 
               <button
@@ -587,17 +671,120 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     handleAutoId('SDL', category);
                   }
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                className={`py-2 px-2 sm:px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                   managementType === 'seedling'
                     ? 'bg-[#1a3828] text-[#4ade80] border-[#295b3f] shadow-md'
                     : 'bg-[#1b1c21] text-gray-400 border-[#282931] hover:text-[#4ade80] hover:bg-[#22232a]'
                 }`}
               >
-                <Sprout className="w-4 h-4 text-[#4ade80]" />
-                <span>実生苗 (種まき管理)</span>
+                <Sprout className="w-3.5 h-3.5 text-[#4ade80] flex-shrink-0" />
+                <span className="truncate">実生苗 (種まき)</span>
               </button>
             </div>
           </div>
+
+          {/* 子株（カキ仔）専用：親株情報＆収穫情報バナー */}
+          {managementType === 'pup' && (
+            <div className="bg-[#241c13] border border-[#4a3b22] rounded-xl p-3.5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <Scissors className="w-4 h-4" />
+                  子株データ (親株・採取履歴)
+                </span>
+                {parentPlantId && (
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-700/60">
+                    親株: {parentPlantId}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-300 mb-1">
+                    親株（採取元の株）の選択
+                  </label>
+                  <select
+                    value={parentPlantId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setParentPlantId(selectedId);
+                      const parent = allPlants.find((p) => p.id === selectedId);
+                      if (parent) {
+                        setParentPlantName(parent.name);
+                        // 自動でIDも親株ベースに提案（新規時のみ）
+                        if (!editingPlant) {
+                          setId(generatePupId(parent.id, allPlants));
+                          if (!name) setName(`${parent.name} (カキ仔)`);
+                          if (!japaneseName && parent.japaneseName) setJapaneseName(parent.japaneseName);
+                          if (!lineageOrNursery) {
+                            setLineageOrNursery(
+                              parent.lineageOrNursery ? `${parent.lineageOrNursery} (カキ仔)` : `${parent.name} カキ仔`
+                            );
+                          }
+                          setCategory(parent.category);
+                          if (parent.soilMix) setSoilMix(parent.soilMix);
+                        }
+                      } else {
+                        setParentPlantName('');
+                      }
+                    }}
+                    className="w-full px-3 py-1.5 text-xs bg-[#1a140d] border border-[#3d2e1c] rounded-lg text-gray-100 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="">-- 親株を選択してください --</option>
+                    {allPlants
+                      .filter((p) => !editingPlant || p.id !== editingPlant.id)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          [{p.id}] {p.name} {p.japaneseName ? `(${p.japaneseName})` : ''}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-300 mb-1">
+                    親離れ・採取年月 (収穫年月)
+                  </label>
+                  <input
+                    type="month"
+                    value={harvestDate}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setHarvestDate(val);
+                      if (!acquisitionDate) setAcquisitionDate(val);
+                    }}
+                    className="w-full px-3 py-1.5 text-xs bg-[#1a140d] border border-[#3d2e1c] rounded-lg text-gray-100 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {parentPlantId && (
+                <div className="pt-2 border-t border-[#3d2e1c] flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">
+                    親株情報: <strong className="text-gray-200">{parentPlantName || parentPlantId}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const parent = allPlants.find((p) => p.id === parentPlantId);
+                      if (parent) {
+                        setName(`${parent.name} (カキ仔)`);
+                        if (parent.japaneseName) setJapaneseName(parent.japaneseName);
+                        setLineageOrNursery(
+                          parent.lineageOrNursery ? `${parent.lineageOrNursery} (カキ仔)` : `${parent.name} カキ仔`
+                        );
+                        setCategory(parent.category);
+                        if (parent.soilMix) setSoilMix(parent.soilMix);
+                      }
+                    }}
+                    className="text-[11px] text-amber-300 hover:text-amber-100 underline cursor-pointer"
+                  >
+                    親株の情報を再反映
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 実生苗専用：播種情報バナー */}
           {managementType === 'seedling' && (
@@ -720,8 +907,19 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               <label className="text-xs font-semibold text-gray-300">
                 管理ID <span className="text-amber-400">*</span>
               </label>
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <div className="flex items-center gap-1.5 text-xs text-gray-400 flex-wrap justify-end">
                 <span className="text-[11px]">自動採番:</span>
+                {parentPlantId && (
+                  <button
+                    type="button"
+                    onClick={() => setId(generatePupId(parentPlantId, allPlants))}
+                    className="px-2 py-0.5 rounded bg-[#2d2213] hover:bg-[#3d2f1a] text-amber-300 border border-amber-600/60 text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                    title={`親株 ${parentPlantId} の子株番号として採番`}
+                  >
+                    <Scissors className="w-3 h-3" />
+                    子株ID ({parentPlantId}-P..)
+                  </button>
+                )}
                 {managementType === 'seedling' && (
                   <button
                     type="button"

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { Plant, PlantCategory, GridSize, Theme, ManagementType } from '../types/plant';
-import { Plus, Download, Upload, RotateCcw, Save, CheckCircle2, Sprout, Trees, Settings } from 'lucide-react';
+import { Plus, Download, Upload, RotateCcw, Save, CheckCircle2, Sprout, Trees, Settings, Scissors } from 'lucide-react';
 
 interface NanoHeaderProps {
   plants: Plant[];
@@ -43,6 +43,7 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
   const isDark = theme === 'dark';
 
   const normalCount = plants.filter((p) => (p.managementType || 'normal') === 'normal').length;
+  const pupCount = plants.filter((p) => p.managementType === 'pup').length;
   const seedlingCount = plants.filter((p) => p.managementType === 'seedling').length;
 
   const handleSaveClick = () => {
@@ -271,7 +272,7 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
             )}
           </button>
 
-          {/* 新しい株 / 実生苗を登録ボタン（iPhoneでも途切れないジャストフィット設計） */}
+          {/* 新しい株 / 子株 / 実生苗を登録ボタン（iPhoneでも途切れないジャストフィット設計） */}
           <button
             onClick={onOpenCreateModal}
             className={`px-2.5 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-full shadow-md transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer flex-shrink-0 ${
@@ -279,6 +280,10 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
                 ? isDark
                   ? 'text-black bg-[#4ade80] hover:bg-[#22c55e] shadow-emerald-950/40'
                   : 'text-white bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20'
+                : managementType === 'pup'
+                ? isDark
+                  ? 'text-black bg-amber-400 hover:bg-amber-300 shadow-amber-950/40'
+                  : 'text-white bg-amber-600 hover:bg-amber-700 shadow-amber-900/20'
                 : isDark
                 ? 'text-black bg-[#fbbf24] hover:bg-[#f59e0b] shadow-amber-950/40'
                 : 'text-white bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20'
@@ -286,20 +291,24 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
           >
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
             <span className="hidden sm:inline">
-              {managementType === 'seedling' ? '実生苗を登録' : '新しい株を登録'}
+              {managementType === 'pup'
+                ? '子株を登録'
+                : managementType === 'seedling'
+                ? '実生苗を登録'
+                : '新しい株を登録'}
             </span>
             <span className="sm:hidden">
-              {managementType === 'seedling' ? '実生登録' : '株を登録'}
+              {managementType === 'pup' ? '子株登録' : managementType === 'seedling' ? '実生登録' : '株を登録'}
             </span>
           </button>
         </div>
       </div>
 
-      {/* 2段目：【通常株/実生】とその下に【ジャンル】を配置するコントロールエリア */}
+      {/* 2段目：【通常株/子株/実生】とその下に【ジャンル】を配置するコントロールエリア */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 pt-1 border-t border-dashed transition-colors flex flex-col md:flex-row md:items-end justify-between gap-3 overflow-x-auto">
-        {/* 左側：上下2段構成（上: 通常株/実生、下: ジャンル一覧） - コンパクトサイズ */}
+        {/* 左側：上下2段構成（上: 通常株/子株/実生、下: ジャンル一覧） - コンパクトサイズ */}
         <div className="space-y-1.5 flex-1">
-          {/* 上段：通常株 vs 実生苗 1クリック切替タブ（小型化） */}
+          {/* 上段：通常株 vs 子株 vs 実生苗 1クリック切替タブ（小型化） */}
           <div className="flex items-center gap-1.5">
             <span
               className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider select-none border ${
@@ -344,6 +353,36 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
                   }`}
                 >
                   {normalCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => onManagementTypeChange('pup')}
+                className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+                  managementType === 'pup'
+                    ? isDark
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold border border-amber-300 shadow-md shadow-amber-600/30'
+                      : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold border border-amber-700 shadow-sm'
+                    : isDark
+                    ? 'text-stone-400 hover:text-amber-300 hover:bg-amber-500/10'
+                    : 'text-stone-600 hover:text-amber-900 hover:bg-amber-100/50'
+                }`}
+                title="親株から採取した子株（カキ仔）を表示"
+              >
+                <Scissors className={`w-3.5 h-3.5 ${managementType === 'pup' ? (isDark ? 'text-slate-950' : 'text-white') : 'text-amber-400'}`} />
+                <span>子株 (カキ仔)</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                    managementType === 'pup'
+                      ? isDark
+                        ? 'bg-black/25 text-slate-950 font-bold'
+                        : 'bg-black/20 text-white font-bold'
+                      : isDark
+                      ? 'bg-[#25262e] text-stone-400'
+                      : 'bg-white text-stone-600 border border-stone-200'
+                  }`}
+                >
+                  {pupCount}
                 </span>
               </button>
 
