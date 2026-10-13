@@ -101,13 +101,15 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // 一時保存・下書きステータス
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+  const [autoSavedAt, setAutoSavedAt] = useState<string | null>(null);
+  const [manualSavedNotice, setManualSavedNotice] = useState<string | null>(null);
   const [hasRestoredDraft, setHasRestoredDraft] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draftKey = editingPlant ? `edit_${editingPlant.id}` : 'new';
   const autoSaveTimerRef = useRef<number | null>(null);
+  const manualNoticeTimerRef = useRef<number | null>(null);
 
   // 鉢・サイズの候補一覧（ユーザー入力履歴 + 登録済み全株データ + デフォルト）
   const availablePotSizes = useMemo(() => {
@@ -142,7 +144,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   // 初期化 & 下書き復元処理
   useEffect(() => {
     if (!isOpen) {
-      setSavedNotice(null);
+      setManualSavedNotice(null);
+      setAutoSavedAt(null);
       setHasRestoredDraft(false);
       return;
     }
@@ -196,6 +199,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPupCount(editingPlant.pupCount !== undefined ? String(editingPlant.pupCount) : '');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
+      setAutoSavedAt(null);
+      setManualSavedNotice(null);
       setError(null);
     } else {
       const today = new Date().toISOString().split('T')[0];
@@ -221,6 +226,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setPupCount('');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
+      setAutoSavedAt(null);
+      setManualSavedNotice(null);
       setError(null);
     }
   }, [editingPlant, isOpen, allPlants, draftKey, defaultManagementType]);
@@ -257,16 +264,18 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       });
 
       if (isManual) {
-        setSavedNotice(`入力途中のデータを保存しました (${timeStr})`);
+        if (manualNoticeTimerRef.current) {
+          window.clearTimeout(manualNoticeTimerRef.current);
+        }
+        setManualSavedNotice(`下書きを保存しました (${timeStr})`);
+        manualNoticeTimerRef.current = window.setTimeout(() => {
+          setManualSavedNotice(null);
+        }, 2500);
       } else {
-        setSavedNotice(`自動保存完了 (${timeStr})`);
+        setAutoSavedAt(timeStr);
       }
-
-      setTimeout(() => {
-        setSavedNotice(null);
-      }, 3000);
     },
-    [draftKey, id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, lastRepottedDate, repottingHistory, soilMix, potSize, imageUrl, notes]
+    [draftKey, id, name, japaneseName, category, managementType, lineageOrNursery, acquisitionDate, lastWateredDate, lastRepottedDate, repottingHistory, soilMix, potSize, imageUrl, notes, seedCount, germinationCount, pupCount]
   );
 
   // 植え替え履歴への追加ハンドラー
@@ -310,6 +319,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       if (autoSaveTimerRef.current) {
         window.clearTimeout(autoSaveTimerRef.current);
       }
+      if (manualNoticeTimerRef.current) {
+        window.clearTimeout(manualNoticeTimerRef.current);
+      }
     };
   }, [id, name, japaneseName, category, lineageOrNursery, acquisitionDate, lastWateredDate, soilMix, potSize, imageUrl, notes, isOpen, handleSaveDraft]);
 
@@ -337,7 +349,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     clearFormDraft(draftKey);
     setHasRestoredDraft(false);
     setDraftSavedAt(null);
-    setSavedNotice('下書きを破棄し初期化しました');
+    setAutoSavedAt(null);
+    if (manualNoticeTimerRef.current) {
+      window.clearTimeout(manualNoticeTimerRef.current);
+    }
+    setManualSavedNotice('下書きを破棄し初期化しました');
+    manualNoticeTimerRef.current = window.setTimeout(() => {
+      setManualSavedNotice(null);
+    }, 2500);
 
     if (editingPlant) {
       setId(editingPlant.id);
@@ -483,9 +502,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     複製モード
                   </span>
                 ) : (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-medium flex items-center gap-1">
-                    <Save className="w-3 h-3" />
-                    入力保護中
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-medium flex items-center gap-1.5 transition-all">
+                    <Save className="w-3 h-3 flex-shrink-0" />
+                    <span>{autoSavedAt ? `自動保存済 (${autoSavedAt})` : '自動保存ON'}</span>
                   </span>
                 )}
               </div>
@@ -505,11 +524,20 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             <button
               type="button"
               onClick={() => handleSaveDraft(true)}
-              className="px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
               title="現在の入力内容を下書き保存"
             >
-              <Save className="w-3.5 h-3.5 text-emerald-400" />
-              <span>下書き保存</span>
+              {manualSavedNotice ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>保存完了</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>下書き保存</span>
+                </>
+              )}
             </button>
 
             <button
@@ -543,14 +571,6 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               <RotateCcw className="w-3 h-3" />
               下書きを破棄
             </button>
-          </div>
-        )}
-
-        {/* 保存完了通知 */}
-        {savedNotice && (
-          <div className="bg-emerald-950/80 border-b border-emerald-700 px-6 py-2 flex items-center gap-2 text-xs text-emerald-200 font-medium">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>{savedNotice}</span>
           </div>
         )}
 
@@ -1162,6 +1182,16 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </div>
           </div>
         </form>
+
+        {/* 手動下書き保存トースト（レイアウト・画面高さを1ピクセルも動かさないフローティング表示） */}
+        {manualSavedNotice && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-emerald-900/95 text-emerald-100 border border-emerald-500/50 shadow-2xl px-4 py-2 rounded-full text-xs font-medium flex items-center gap-2 backdrop-blur-md">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
+              <span>{manualSavedNotice}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
