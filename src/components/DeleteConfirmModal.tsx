@@ -45,7 +45,12 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               </div>
               <div>
                 <span className="text-gray-500">植物名:</span>{' '}
-                <span className="font-medium text-gray-200">{plant.name}</span>
+                <span className="font-medium text-gray-200">
+                  {plant.japaneseName || plant.name}
+                  {plant.japaneseName && plant.japaneseName !== plant.name && (
+                    <span className="text-gray-400 font-mono text-[11px] ml-1">({plant.name})</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>

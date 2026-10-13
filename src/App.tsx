@@ -203,7 +203,8 @@ export const App: React.FC = () => {
     const duplicatedPlant: Plant = {
       ...sourcePlant,
       id: nextId,
-      name: `${sourcePlant.name} (複製)`,
+      name: sourcePlant.name ? `${sourcePlant.name} (複製)` : '',
+      japaneseName: sourcePlant.japaneseName ? `${sourcePlant.japaneseName} (複製)` : undefined,
       acquisitionDate: sourcePlant.acquisitionDate ? sourcePlant.acquisitionDate.slice(0, 7) : today.slice(0, 7),
       lastWateredDate: today,
       createdAt: now,

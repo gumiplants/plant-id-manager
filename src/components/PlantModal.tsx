@@ -389,13 +389,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     e.preventDefault();
     const trimmedId = id.trim();
     const trimmedName = name.trim();
+    const trimmedJapaneseName = japaneseName.trim();
 
     if (!trimmedId) {
       setError('管理IDを入力してください。');
       return;
     }
-    if (!trimmedName) {
-      setError('植物名・品種名を入力してください。');
+    if (!trimmedName && !trimmedJapaneseName) {
+      setError('和名・通称または品種名を入力してください。');
       return;
     }
 
@@ -435,8 +436,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
 
     onSave({
       id: trimmedId,
-      name: trimmedName,
-      japaneseName: japaneseName.trim(),
+      name: trimmedName || trimmedJapaneseName,
+      japaneseName: trimmedJapaneseName,
       category,
       managementType,
       lineageOrNursery: lineageOrNursery.trim(),
@@ -469,9 +470,9 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-gray-100">
                   {isDuplicate
-                    ? `${editingPlant?.name} をコピーして新規登録`
+                    ? `${editingPlant?.japaneseName || editingPlant?.name} をコピーして新規登録`
                     : editingPlant
-                    ? `${editingPlant.name} の編集`
+                    ? `${editingPlant.japaneseName || editingPlant.name} の編集`
                     : managementType === 'seedling'
                     ? '新しい実生苗（種まき）を登録'
                     : '新しい株を登録'}
@@ -800,30 +801,29 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             </div>
           </div>
 
-          {/* 植物名（英語表記/品種名）＆ 日本語名 */}
+          {/* 和名・通称 ＆ 品種名 (学名/英名) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                {managementType === 'seedling' ? '実生品種名 (学名/英名)' : '品種名 (学名/英名)'} <span className="text-amber-400">*</span>
+                和名・通称 <span className="text-amber-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={japaneseName}
+                onChange={(e) => setJapaneseName(e.target.value)}
+                placeholder="例: チタノタ シーザー、グラキリス実生"
+                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                {managementType === 'seedling' ? '実生品種名 (学名/英名)' : '品種名 (学名/英名)'}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={managementType === 'seedling' ? "例: Pachypodium gracilius (実生)" : "例: Agave titanota 'Caesar'"}
-                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                和名・通称
-              </label>
-              <input
-                type="text"
-                value={japaneseName}
-                onChange={(e) => setJapaneseName(e.target.value)}
-                placeholder="例: グラキリス実生、チタノタ実生"
                 className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
               />
             </div>

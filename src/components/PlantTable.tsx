@@ -102,11 +102,11 @@ export const PlantTable: React.FC<PlantTableProps> = ({
                       : 'text-slate-900 group-hover:text-emerald-700'
                   }`}
                 >
-                  {plant.name}
+                  {plant.japaneseName || plant.name}
                 </div>
                 {plant.japaneseName && plant.japaneseName !== plant.name && (
                   <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                    {plant.japaneseName}
+                    {plant.name}
                   </p>
                 )}
                 {plant.managementType === 'seedling' && (plant.seedCount !== undefined || plant.germinationCount !== undefined) && (

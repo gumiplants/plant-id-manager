@@ -77,11 +77,11 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
           {/* 写真下部の植物名 */}
           <div className="absolute bottom-3 left-6 right-6 z-20">
             <h2 className="text-xl font-black text-white leading-tight drop-shadow-md">
-              {plant.name}
+              {plant.japaneseName || plant.name}
             </h2>
-            {plant.japaneseName && (
-              <p className="text-xs text-gray-300 drop-shadow mt-0.5">
-                {plant.japaneseName}
+            {plant.japaneseName && plant.japaneseName !== plant.name && (
+              <p className="text-xs text-gray-300 drop-shadow mt-0.5 font-medium">
+                {plant.name}
               </p>
             )}
           </div>

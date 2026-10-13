@@ -57,9 +57,16 @@ export const PlantCardList: React.FC<PlantCardListProps> = ({
             </div>
 
             {/* 植物名 */}
-            <h3 className="text-base font-bold text-gray-100 group-hover:text-emerald-300 transition-colors line-clamp-1 mb-1">
-              {plant.name}
+            <h3 className="text-base font-bold text-gray-100 group-hover:text-emerald-300 transition-colors line-clamp-1">
+              {plant.japaneseName || plant.name}
             </h3>
+            {plant.japaneseName && plant.japaneseName !== plant.name ? (
+              <p className="text-xs text-gray-400 line-clamp-1 mb-1 font-mono">
+                {plant.name}
+              </p>
+            ) : (
+              <div className="mb-1" />
+            )}
 
             {/* 血統・ナーセリー名 */}
             {plant.lineageOrNursery ? (

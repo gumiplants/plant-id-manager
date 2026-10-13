@@ -139,7 +139,7 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                 <div>
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-medium ${isDark ? 'text-[#787a87]' : 'text-stone-500'}`}>
-                      {plant.managementType === 'seedling' ? '実生品種名' : '品種名'}
+                      {plant.japaneseName ? '和名・通称' : (plant.managementType === 'seedling' ? '実生品種名' : '品種名')}
                     </span>
                     {plant.potSize && (
                       <span className={`text-xs flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-stone-600'}`}>
@@ -154,11 +154,11 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                         : 'text-stone-900 group-hover:text-emerald-700'
                     }`}
                   >
-                    {plant.name}
+                    {plant.japaneseName || plant.name}
                   </h3>
                   {plant.japaneseName && plant.japaneseName !== plant.name && (
                     <p className={`text-xs mt-0.5 ${isDark ? 'text-[#9a9ba6]' : 'text-stone-600'}`}>
-                      {plant.japaneseName}
+                      {plant.name}
                     </p>
                   )}
                   {plant.managementType === 'seedling' && (plant.seedCount !== undefined || plant.germinationCount !== undefined) && (
@@ -339,10 +339,15 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                         ? 'text-gray-100 group-hover:text-[#fbbf24]'
                         : 'text-stone-900 group-hover:text-emerald-700'
                     }`}
-                    title={plant.name}
+                    title={plant.japaneseName ? `${plant.japaneseName} (${plant.name})` : plant.name}
                   >
-                    {plant.name}
+                    {plant.japaneseName || plant.name}
                   </h3>
+                  {plant.japaneseName && plant.japaneseName !== plant.name && (
+                    <p className={`text-[9px] truncate -mt-0.5 mb-0.5 ${isDark ? 'text-gray-400' : 'text-stone-500'}`}>
+                      {plant.name}
+                    </p>
+                  )}
 
                   {/* 入手日/播種日 & 水やり経過 */}
                   <div className="mt-1 space-y-0.5 text-[10px]">
@@ -506,7 +511,7 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
             <div className="p-4 pt-1 flex flex-col justify-between flex-1">
               <div>
                 <span className={`text-[11px] block mb-0.5 font-medium ${isDark ? 'text-[#787a87]' : 'text-stone-500'}`}>
-                  {plant.managementType === 'seedling' ? '実生品種名' : '品種名'}
+                  {plant.japaneseName ? '和名・通称' : (plant.managementType === 'seedling' ? '実生品種名' : '品種名')}
                 </span>
                 <h3
                   className={`text-[15px] font-bold leading-snug transition-colors truncate ${
@@ -514,12 +519,13 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                       ? 'text-gray-100 group-hover:text-[#fbbf24]'
                       : 'text-stone-900 group-hover:text-emerald-700'
                   }`}
+                  title={plant.japaneseName || plant.name}
                 >
-                  {plant.name}
+                  {plant.japaneseName || plant.name}
                 </h3>
                 {plant.japaneseName && plant.japaneseName !== plant.name && (
                   <p className={`text-[11px] truncate mb-1.5 ${isDark ? 'text-[#9395a1]' : 'text-stone-600'}`}>
-                    {plant.japaneseName}
+                    {plant.name}
                   </p>
                 )}
                 {plant.managementType === 'seedling' && (plant.seedCount !== undefined || plant.germinationCount !== undefined) && (
