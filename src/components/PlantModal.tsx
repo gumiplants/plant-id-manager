@@ -96,6 +96,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   // 実生苗専用項目
   const [seedCount, setSeedCount] = useState<string>('');
   const [germinationCount, setGerminationCount] = useState<string>('');
+  // 通常株専用項目
+  const [pupCount, setPupCount] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   // 一時保存・下書きステータス
@@ -167,6 +169,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setNotes(existingDraft.notes || '');
       setSeedCount(existingDraft.seedCount !== undefined ? String(existingDraft.seedCount) : '');
       setGerminationCount(existingDraft.germinationCount !== undefined ? String(existingDraft.germinationCount) : '');
+      setPupCount(existingDraft.pupCount !== undefined ? String(existingDraft.pupCount) : '');
       setHasRestoredDraft(true);
       setDraftSavedAt(existingDraft.savedAt);
       setError(null);
@@ -190,6 +193,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setNotes(editingPlant.notes || '');
       setSeedCount(editingPlant.seedCount !== undefined ? String(editingPlant.seedCount) : '');
       setGerminationCount(editingPlant.germinationCount !== undefined ? String(editingPlant.germinationCount) : '');
+      setPupCount(editingPlant.pupCount !== undefined ? String(editingPlant.pupCount) : '');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
       setError(null);
@@ -214,6 +218,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setNotes('');
       setSeedCount('');
       setGerminationCount('');
+      setPupCount('');
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
       setError(null);
@@ -241,6 +246,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         sowingDate: acquisitionDate,
         seedCount: seedCount ? parseInt(seedCount, 10) : undefined,
         germinationCount: germinationCount ? parseInt(germinationCount, 10) : undefined,
+        pupCount: pupCount ? parseInt(pupCount, 10) : undefined,
       });
 
       const now = new Date();
@@ -445,6 +451,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       sowingDate: acquisitionDate,
       seedCount: !isNaN(Number(parsedSeedCount)) ? parsedSeedCount : undefined,
       germinationCount: !isNaN(Number(parsedGerminationCount)) ? parsedGerminationCount : undefined,
+      pupCount: managementType !== 'seedling' && pupCount ? parseInt(pupCount, 10) : undefined,
     });
     onClose();
   };
@@ -1078,6 +1085,26 @@ export const PlantModal: React.FC<PlantModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* 子株数（通常株のみ） */}
+          {managementType !== 'seedling' && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                子株の数
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="0"
+                  value={pupCount}
+                  onChange={(e) => setPupCount(e.target.value)}
+                  placeholder="例: 3"
+                  className="w-32 px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-xs text-gray-400">株</span>
+              </div>
+            </div>
+          )}
 
           {/* メモ */}
           <div>

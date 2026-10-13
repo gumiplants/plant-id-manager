@@ -278,6 +278,7 @@ export interface PlantDraft {
   sowingDate?: string;
   seedCount?: number;
   germinationCount?: number;
+  pupCount?: number;
   savedAt: string;
 }
 

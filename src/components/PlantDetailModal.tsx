@@ -116,6 +116,11 @@ export const PlantDetailModal: React.FC<PlantDetailModalProps> = ({
               <span className="font-medium text-gray-200">
                 {plant.lineageOrNursery || '—'}
               </span>
+              {plant.managementType !== 'seedling' && plant.pupCount !== undefined && plant.pupCount > 0 && (
+                <span className="block mt-1 text-[11px] text-amber-300">
+                  子株: <strong className="font-mono">{plant.pupCount}</strong> 株
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">

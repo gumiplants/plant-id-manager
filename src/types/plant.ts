@@ -28,6 +28,8 @@ export interface Plant {
   sowingDate?: string;        // 播種日 (YYYY-MM-DD)
   seedCount?: number;         // 播種粒数
   germinationCount?: number;  // 発芽数
+  // 通常株用項目
+  pupCount?: number;          // 子株の数
 }
 
 export type SortField = 'id' | 'name' | 'acquisitionDate' | 'createdAt' | 'watered' | 'repotted';
