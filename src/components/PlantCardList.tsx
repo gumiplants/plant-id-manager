@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant } from '../types/plant';
 import { formatYearMonth } from '../utils/storage';
-import { Edit3, Trash2, Calendar, Tag, Box, Info, Scissors, Sprout } from 'lucide-react';
+import { Edit3, Trash2, Calendar, Tag, Box, Info } from 'lucide-react';
 
 interface PlantCardListProps {
   plants: Plant[];
@@ -31,23 +31,9 @@ export const PlantCardList: React.FC<PlantCardListProps> = ({
           {/* 上部: ID & 操作ボタン */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono font-bold text-xs px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
-                  {plant.id}
-                </span>
-                {plant.managementType === 'pup' && (
-                  <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-[#2d2213] text-amber-300 border border-amber-600/60 flex items-center gap-1">
-                    <Scissors className="w-2.5 h-2.5" />
-                    子株
-                  </span>
-                )}
-                {plant.managementType === 'seedling' && (
-                  <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-[#153423] text-[#4ade80] border border-[#205137] flex items-center gap-1">
-                    <Sprout className="w-2.5 h-2.5" />
-                    実生
-                  </span>
-                )}
-              </div>
+              <span className="font-mono font-bold text-xs px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                {plant.id}
+              </span>
 
               <div
                 className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity"

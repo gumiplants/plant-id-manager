@@ -75,10 +75,10 @@ export const App: React.FC = () => {
     return 'medium';
   });
 
+  // モーダル管理
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
-  const [initialParentPlant, setInitialParentPlant] = useState<Plant | null>(null);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [detailPlant, setDetailPlant] = useState<Plant | null>(null);
   const [deletingPlant, setDeletingPlant] = useState<Plant | null>(null);
@@ -212,14 +212,6 @@ export const App: React.FC = () => {
 
     setIsDuplicate(true);
     setEditingPlant(duplicatedPlant);
-    setIsFormModalOpen(true);
-  };
-
-  // 親株から子株を採取・新規登録する機能
-  const handleAddPup = (parentPlant: Plant) => {
-    setIsDuplicate(false);
-    setEditingPlant(null);
-    setInitialParentPlant(parentPlant);
     setIsFormModalOpen(true);
   };
 
@@ -442,16 +434,12 @@ export const App: React.FC = () => {
               <Sprout className="w-10 h-10" />
             </div>
             <h2 className="text-xl font-bold">
-              {managementType === 'pup'
-                ? '登録されている子株（カキ仔）がありません'
-                : managementType === 'seedling'
+              {managementType === 'seedling'
                 ? '登録されている実生苗（種まき）がありません'
                 : '登録されている株がありません'}
             </h2>
             <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-gray-400' : 'text-stone-600'}`}>
-              {managementType === 'pup'
-                ? '親株から採取した子株（カキ仔）を登録して、親離れ年月や血統、独立後の育成ログを記録しましょう。親株の詳細画面からもワンクリックで子株を登録できます。'
-                : managementType === 'seedling'
+              {managementType === 'seedling'
                 ? 'パキポディウムやアガベなどの種まき記録を登録して、播種日や発芽数、腰水管理をログに残しましょう。'
                 : 'アガベやパキポディウム、サボテンなどの株を登録して、写真や水やりサイクルを一元管理しましょう。'}
             </p>
@@ -459,7 +447,6 @@ export const App: React.FC = () => {
               <button
                 onClick={() => {
                   setEditingPlant(null);
-                  setInitialParentPlant(null);
                   setIsFormModalOpen(true);
                 }}
                 className={`px-5 py-2.5 text-xs font-bold rounded-full shadow-lg cursor-pointer transition-colors ${
@@ -467,20 +454,12 @@ export const App: React.FC = () => {
                     ? isDark
                       ? 'text-black bg-[#4ade80] hover:bg-[#22c55e]'
                       : 'text-white bg-emerald-600 hover:bg-emerald-700'
-                    : managementType === 'pup'
-                    ? isDark
-                      ? 'text-black bg-amber-400 hover:bg-amber-300'
-                      : 'text-white bg-amber-600 hover:bg-amber-700'
                     : isDark
                     ? 'text-black bg-[#fbbf24] hover:bg-[#f59e0b]'
                     : 'text-white bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >
-                {managementType === 'pup'
-                  ? '最初の子株を登録する'
-                  : managementType === 'seedling'
-                  ? '最初の実生苗を登録する'
-                  : '最初の株を登録する'}
+                {managementType === 'seedling' ? '最初の実生苗を登録する' : '最初の株を登録する'}
               </button>
               <button
                 onClick={handleResetSamples}
@@ -585,8 +564,8 @@ export const App: React.FC = () => {
             ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 border-amber-300 shadow-amber-950/60'
             : 'bg-gradient-to-tr from-emerald-700 to-green-600 text-white border-emerald-400 shadow-emerald-950/40'
         }`}
-        aria-label={managementType === 'pup' ? '子株を登録' : managementType === 'seedling' ? '実生苗を登録' : '新しい株を登録'}
-        title={managementType === 'pup' ? '子株を登録' : managementType === 'seedling' ? '実生苗を登録' : '新しい株を登録'}
+        aria-label={managementType === 'seedling' ? '実生苗を登録' : '新しい株を登録'}
+        title={managementType === 'seedling' ? '実生苗を登録' : '新しい株を登録'}
       >
         <Plus className="w-7 h-7 stroke-[2.5]" />
       </button>
@@ -597,7 +576,6 @@ export const App: React.FC = () => {
         onClose={() => {
           setIsFormModalOpen(false);
           setEditingPlant(null);
-          setInitialParentPlant(null);
           setIsDuplicate(false);
         }}
         onSave={handleSavePlant}
@@ -605,17 +583,14 @@ export const App: React.FC = () => {
         allPlants={plants}
         defaultManagementType={managementType}
         isDuplicate={isDuplicate}
-        initialParentPlant={initialParentPlant}
       />
 
       {/* 詳細モーダル */}
       <PlantDetailModal
         plant={detailPlant}
-        allPlants={plants}
         onClose={() => setDetailPlant(null)}
         onEdit={(plant) => {
           setIsDuplicate(false);
-          setInitialParentPlant(null);
           setEditingPlant(plant);
           setIsFormModalOpen(true);
         }}
@@ -623,8 +598,6 @@ export const App: React.FC = () => {
         onWaterPlant={handleWaterPlant}
         onRepotPlant={handleRepotPlant}
         onDuplicate={handleDuplicatePlant}
-        onAddPup={handleAddPup}
-        onSelectPlant={(plant) => setDetailPlant(plant)}
       />
 
       {/* 削除確認モーダル */}

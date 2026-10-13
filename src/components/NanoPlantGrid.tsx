@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant, GridSize, Theme } from '../types/plant';
 import { getDaysSince, getMonthsSince, formatYearMonth } from '../utils/storage';
-import { Droplet, Edit3, Trash2, Sprout, Box, Copy, Scissors } from 'lucide-react';
+import { Droplet, Edit3, Trash2, Sprout, Box, Copy } from 'lucide-react';
 
 interface NanoPlantGridProps {
   plants: Plant[];
@@ -119,18 +119,6 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                   >
                     管理ID {plant.id}
                   </span>
-                  {plant.managementType === 'pup' && (
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-xs font-bold border backdrop-blur flex items-center gap-1 shadow-sm ${
-                        isDark
-                          ? 'bg-[#2d2213]/95 text-amber-300 border-amber-600/60'
-                          : 'bg-amber-100/95 text-amber-900 border-amber-300'
-                      }`}
-                    >
-                      <Scissors className="w-3 h-3" />
-                      子株
-                    </span>
-                  )}
                   {plant.managementType === 'seedling' && (
                     <span
                       className={`px-2 py-0.5 rounded-md text-xs font-bold border backdrop-blur flex items-center gap-1 shadow-sm ${
@@ -327,18 +315,6 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                   >
                     {plant.id}
                   </span>
-                  {plant.managementType === 'pup' && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold border backdrop-blur flex items-center gap-0.5 ${
-                        isDark
-                          ? 'bg-[#2d2213]/95 text-amber-300 border-amber-600/60'
-                          : 'bg-amber-100/95 text-amber-900 border-amber-300 shadow-sm'
-                      }`}
-                    >
-                      <Scissors className="w-2.5 h-2.5" />
-                      子株
-                    </span>
-                  )}
                   {plant.managementType === 'seedling' && (
                     <span
                       className={`px-1.5 py-0.5 rounded text-[9px] font-bold border backdrop-blur flex items-center gap-0.5 ${
@@ -511,18 +487,6 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                 >
                   管理ID {plant.id}
                 </span>
-                {plant.managementType === 'pup' && (
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold border backdrop-blur flex items-center gap-1 shadow-sm ${
-                      isDark
-                        ? 'bg-[#2d2213]/95 text-amber-300 border-amber-600/60'
-                        : 'bg-amber-100/95 text-amber-900 border-amber-300'
-                    }`}
-                  >
-                    <Scissors className="w-3 h-3" />
-                    子株
-                  </span>
-                )}
                 {plant.managementType === 'seedling' && (
                   <span
                     className={`px-2 py-0.5 rounded-md text-[11px] font-bold border backdrop-blur flex items-center gap-1 shadow-sm ${

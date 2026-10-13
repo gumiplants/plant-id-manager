@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant, Theme } from '../types/plant';
 import { formatYearMonth } from '../utils/storage';
-import { Edit3, Trash2, Eye, Calendar, Scissors } from 'lucide-react';
+import { Edit3, Trash2, Eye, Calendar } from 'lucide-react';
 
 interface PlantTableProps {
   plants: Plant[];
@@ -85,12 +85,6 @@ export const PlantTable: React.FC<PlantTableProps> = ({
                   >
                     {plant.id}
                   </span>
-                  {plant.managementType === 'pup' && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#2d2213] text-amber-300 border border-amber-600/60 flex items-center gap-0.5">
-                      <Scissors className="w-2.5 h-2.5" />
-                      子株
-                    </span>
-                  )}
                   {plant.managementType === 'seedling' && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#153423] text-[#4ade80] border border-[#205137]">
                       実生
