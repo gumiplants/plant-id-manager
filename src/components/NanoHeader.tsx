@@ -140,6 +140,15 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
       inactiveClassLight: 'bg-rose-50/80 text-rose-900 border-rose-300 hover:bg-rose-100',
     },
     {
+      id: 'euphorbia',
+      label: 'ユーフォルビア',
+      dotColor: 'bg-teal-400',
+      activeClassDark: 'bg-teal-400 text-slate-950 border-teal-300 font-bold shadow-md shadow-teal-950/50',
+      activeClassLight: 'bg-teal-600 text-white border-teal-700 font-bold shadow-sm',
+      inactiveClassDark: 'bg-[#122623] text-teal-300 border-teal-800/70 hover:bg-[#1a3834] hover:text-teal-200',
+      inactiveClassLight: 'bg-teal-50/80 text-teal-900 border-teal-300 hover:bg-teal-100',
+    },
+    {
       id: 'other',
       label: 'その他',
       dotColor: 'bg-purple-400',

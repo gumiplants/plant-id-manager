@@ -263,7 +263,7 @@ export interface PlantDraft {
   id: string;
   name: string;
   japaneseName?: string;
-  category: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'other';
+  category: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'euphorbia' | 'other';
   managementType?: 'normal' | 'seedling';
   lineageOrNursery: string;
   acquisitionDate: string;

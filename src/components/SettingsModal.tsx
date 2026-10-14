@@ -168,6 +168,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       caudex: '塊根植物',
       shrub: '灌木植物',
       cactus: 'サボテン',
+      euphorbia: 'ユーフォルビア',
       other: 'その他',
     };
 

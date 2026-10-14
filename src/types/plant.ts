@@ -1,4 +1,4 @@
-export type PlantCategory = 'all' | 'agave' | 'caudex' | 'shrub' | 'cactus' | 'other';
+export type PlantCategory = 'all' | 'agave' | 'caudex' | 'shrub' | 'cactus' | 'euphorbia' | 'other';
 
 export type ManagementType = 'normal' | 'seedling'; // normal: 通常株(コレクション), seedling: 実生苗(種まき管理)
 
@@ -10,7 +10,7 @@ export interface Plant {
   id: string;                 // 管理ID (例: AGV-001, SDL-001)
   name: string;               // 植物名・品種名 (例: Agave titanota 'Caesar')
   japaneseName?: string;      // 日本語別名 (例: シーザー)
-  category: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'other'; // カテゴリ (アガベ / 塊根植物 / 灌木植物 / サボテン / その他)
+  category: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'euphorbia' | 'other'; // カテゴリ (アガベ / 塊根植物 / 灌木植物 / サボテン / ユーフォルビア / その他)
   managementType?: ManagementType; // 管理区分 ('normal' | 'seedling')
   lineageOrNursery: string;   // 血統・ナーセリー名 / 種子元 (例: Koehres種子, 自家採取)
   acquisitionDate: string;    // 入手日 / 播種日 (YYYY-MM-DD)

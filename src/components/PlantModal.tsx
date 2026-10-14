@@ -82,7 +82,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const [id, setId] = useState('');
   const [name, setName] = useState('');
   const [japaneseName, setJapaneseName] = useState('');
-  const [category, setCategory] = useState<'agave' | 'caudex' | 'shrub' | 'cactus' | 'other'>('agave');
+  const [category, setCategory] = useState<Plant['category']>('agave');
   const [lineageOrNursery, setLineageOrNursery] = useState('');
   const [acquisitionDate, setAcquisitionDate] = useState('');
   const [lastWateredDate, setLastWateredDate] = useState('');
@@ -398,7 +398,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleAutoId = (prefix: string, cat: 'agave' | 'caudex' | 'shrub' | 'cactus' | 'other') => {
+  const handleAutoId = (prefix: string, cat: Plant['category']) => {
     const next = generateNextId(prefix, allPlants);
     setId(next);
     setCategory(cat);
@@ -780,13 +780,20 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 >
                   COP (サボテン)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleAutoId('EUP', 'euphorbia')}
+                  className="px-2 py-0.5 rounded bg-[#2b2c33] hover:bg-[#353740] hover:text-amber-400 border border-[#3b3d47] text-[11px] transition-colors cursor-pointer"
+                >
+                  EUP (ユーフォ)
+                </button>
               </div>
             </div>
             <input
               type="text"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              placeholder={managementType === 'seedling' ? '例: SDL-001, CDX-SD-001' : '例: AGV-001, CDX-002'}
+              placeholder={managementType === 'seedling' ? '例: SDL-001, CDX-SD-001, EUP-SD-001' : '例: AGV-001, CDX-002, EUP-001'}
               className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400 font-mono"
               required
             />
@@ -797,12 +804,13 @@ export const PlantModal: React.FC<PlantModalProps> = ({
             <label className="block text-xs font-semibold text-gray-300 mb-1.5">
               カテゴリ
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {[
                 { id: 'agave', label: 'アガベ' },
                 { id: 'caudex', label: '塊根植物' },
                 { id: 'shrub', label: '灌木植物' },
                 { id: 'cactus', label: 'サボテン' },
+                { id: 'euphorbia', label: 'ユーフォルビア' },
                 { id: 'other', label: 'その他' },
               ].map((c) => (
                 <button

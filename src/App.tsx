@@ -190,6 +190,9 @@ export const App: React.FC = () => {
         case 'cactus':
           prefix = 'COP';
           break;
+        case 'euphorbia':
+          prefix = 'EUP';
+          break;
         default:
           prefix = 'PLT';
           break;
@@ -320,6 +323,9 @@ export const App: React.FC = () => {
             return false;
           }
           if (activeCategory === 'cactus' && !(plant.id.startsWith('COP') || plant.id.startsWith('EPI') || plant.name.includes('サボテン') || plant.name.includes('黒王丸') || plant.name.includes('金鯱'))) {
+            return false;
+          }
+          if (activeCategory === 'euphorbia' && !(plant.id.startsWith('EUP') || plant.name.toLowerCase().includes('euphorbia') || plant.name.includes('ユーフォルビア') || plant.name.includes('オベサ') || plant.name.includes('ホリダ') || plant.name.includes('ギラウミニアナ') || plant.name.includes('バリダ') || plant.name.includes('クラビゲラ'))) {
             return false;
           }
           if (activeCategory === 'other' && plant.category !== 'other') {
