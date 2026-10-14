@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { Plant, PlantCategory, GridSize, Theme, ManagementType } from '../types/plant';
-import { Plus, Download, Upload, RotateCcw, Save, CheckCircle2, Sprout, Trees, Settings } from 'lucide-react';
+import { Plus, Download, Upload, Save, CheckCircle2, Sprout, Trees, Settings } from 'lucide-react';
 
 interface NanoHeaderProps {
   plants: Plant[];
@@ -13,7 +13,6 @@ interface NanoHeaderProps {
   theme: Theme;
   onOpenSettings: () => void;
   onOpenCreateModal: () => void;
-  onResetSamples: () => void;
   onImportPlants: (imported: Plant[]) => void;
   onManualSave: () => void;
   brandName?: string;
@@ -31,7 +30,6 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
   theme,
   onOpenSettings,
   onOpenCreateModal,
-  onResetSamples,
   onImportPlants,
   onManualSave,
   brandName = 'gumi_plants',
@@ -497,22 +495,6 @@ export const NanoHeader: React.FC<NanoHeaderProps> = ({
               onChange={handleFileChange}
               className="hidden"
             />
-
-            <button
-              onClick={() => {
-                if (confirm('初期サンプルデータ（Caesar、グラキリス等）にリセットしますか？')) {
-                  onResetSamples();
-                }
-              }}
-              className={`p-1.5 rounded-full border transition-all cursor-pointer ${
-                isDark
-                  ? 'bg-[#212227] text-gray-400 hover:text-amber-400 hover:bg-[#2c2d34] border-[#30323a]'
-                  : 'bg-slate-100 text-slate-500 hover:text-amber-600 hover:bg-slate-200 border-slate-200'
-              }`}
-              title="サンプルデータをリセット"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>

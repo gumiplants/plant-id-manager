@@ -3,7 +3,6 @@ import type { Plant, PlantCategory, SortField, SortOrder, ViewMode, GridSize, Th
 import {
   loadPlantsFromStorage,
   savePlantsToStorage,
-  INITIAL_PLANTS,
   loadBrandName,
   saveBrandName,
   loadBrandIcon,
@@ -287,12 +286,6 @@ export const App: React.FC = () => {
     setDeletingPlant(null);
   };
 
-  // サンプルデータリセット
-  const handleResetSamples = () => {
-    setPlants(INITIAL_PLANTS);
-    savePlantsToStorage(INITIAL_PLANTS);
-  };
-
   // バックアップ復元
   const handleImportPlants = (imported: Plant[]) => {
     setPlants(imported);
@@ -402,7 +395,6 @@ export const App: React.FC = () => {
           setEditingPlant(null);
           setIsFormModalOpen(true);
         }}
-        onResetSamples={handleResetSamples}
         onImportPlants={handleImportPlants}
         onManualSave={() => savePlantsToStorage(plants)}
       />
@@ -467,16 +459,6 @@ export const App: React.FC = () => {
                 }`}
               >
                 {managementType === 'seedling' ? '最初の実生苗を登録する' : '最初の株を登録する'}
-              </button>
-              <button
-                onClick={handleResetSamples}
-                className={`px-4 py-2.5 text-xs font-medium rounded-full transition-colors cursor-pointer border ${
-                  isDark
-                    ? 'text-gray-300 bg-[#25262e] hover:bg-[#2e3039] border-[#353642]'
-                    : 'text-slate-700 bg-slate-100 hover:bg-slate-200 border-slate-200'
-                }`}
-              >
-                サンプルデータを読み込む
               </button>
             </div>
           </div>
