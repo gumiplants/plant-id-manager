@@ -519,6 +519,15 @@ export function normalizePlantQuery(str: string): string {
 }
 
 /**
+ * 学名・品種名の表記整形（ユーザー指定ルール: horombense には必ず "" を付与する）
+ */
+export function formatScientificName(name: string): string {
+  if (!name) return '';
+  // horombense の前後にクォートがあってもなくても、必ず "horombense" に統一
+  return name.replace(/["'“]?\bhorombense\b["'”]?/gi, '"horombense"');
+}
+
+/**
  * 入力された和名・通称から最もマッチする学名・英名情報を検索する
  * @param japaneseInput 和名・通称の入力文字列
  * @param existingPlants 過去に登録済みの株リスト（ユーザー学習履歴）
@@ -537,7 +546,7 @@ export function lookupScientificName(
       if (normHist && (normHist === normInput || normInput.includes(normHist) || normHist.includes(normInput))) {
         return {
           keywords: [plant.japaneseName],
-          scientificName: plant.name,
+          scientificName: formatScientificName(plant.name),
           category: plant.category || 'other',
           prefix: plant.name.includes('Agave') ? 'AGV' : 'CDX',
         };
@@ -550,7 +559,10 @@ export function lookupScientificName(
     for (const kw of entry.keywords) {
       const normKw = normalizePlantQuery(kw);
       if (normKw === normInput) {
-        return entry;
+        return {
+          ...entry,
+          scientificName: formatScientificName(entry.scientificName),
+        };
       }
     }
   }
@@ -569,7 +581,10 @@ export function lookupScientificName(
           const matchedLen = Math.min(normInput.length, normKw.length);
           if (matchedLen > maxMatchedLength) {
             maxMatchedLength = matchedLen;
-            bestMatch = entry;
+            bestMatch = {
+              ...entry,
+              scientificName: formatScientificName(entry.scientificName),
+            };
           }
         }
       }

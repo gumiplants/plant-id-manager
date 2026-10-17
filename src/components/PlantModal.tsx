@@ -12,7 +12,7 @@ import {
   getStoredLineages,
   saveStoredLineage,
 } from '../utils/storage';
-import { lookupScientificName } from '../utils/plantDictionary';
+import { lookupScientificName, formatScientificName } from '../utils/plantDictionary';
 import type { PlantNameMaster } from '../utils/plantDictionary';
 import {
   X,
@@ -248,7 +248,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     (isManual = true) => {
       saveFormDraft(draftKey, {
         id,
-        name,
+        name: formatScientificName(name),
         japaneseName,
         category,
         managementType,
@@ -445,9 +445,15 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     setIsNameManuallyEdited(true);
   };
 
+  // 学名入力欄のフォーカスアウト時（horombense等に必ず""を自動付与）
+  const handleScientificNameBlur = () => {
+    setName((prev) => formatScientificName(prev));
+  };
+
   // 候補チップをクリックして学名を適用
   const handleApplySuggestion = (targetMatch: PlantNameMaster) => {
-    setName(targetMatch.scientificName);
+    const formatted = formatScientificName(targetMatch.scientificName);
+    setName(formatted);
     setIsNameManuallyEdited(true);
     if (!editingPlant && targetMatch.category) {
       setCategory(targetMatch.category);
@@ -460,7 +466,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedId = id.trim();
-    const trimmedName = name.trim();
+    const trimmedName = formatScientificName(name.trim());
     const trimmedJapaneseName = japaneseName.trim();
 
     if (!trimmedId) {
@@ -918,6 +924,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => handleScientificNameChange(e.target.value)}
+                  onBlur={handleScientificNameBlur}
                   placeholder={managementType === 'seedling' ? '例: Pachypodium gracilius (実生)' : '例: Pachypodium "horombense"'}
                   className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
                 />
