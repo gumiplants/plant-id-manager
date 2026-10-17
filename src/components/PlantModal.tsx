@@ -12,6 +12,8 @@ import {
   getStoredLineages,
   saveStoredLineage,
 } from '../utils/storage';
+import { lookupScientificName } from '../utils/plantDictionary';
+import type { PlantNameMaster } from '../utils/plantDictionary';
 import {
   X,
   Layers,
@@ -25,6 +27,7 @@ import {
   Sprout,
   Trees,
   Copy,
+  Sparkles,
 } from 'lucide-react';
 
 interface PlantModalProps {
@@ -99,6 +102,10 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   // 通常株専用項目
   const [pupCount, setPupCount] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+
+  // 和名から学名自動入力用の状態
+  const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false);
+  const [suggestedMaster, setSuggestedMaster] = useState<PlantNameMaster | null>(null);
 
   // 一時保存・下書きステータス
   const [autoSavedAt, setAutoSavedAt] = useState<string | null>(null);
@@ -197,6 +204,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setSeedCount(editingPlant.seedCount !== undefined ? String(editingPlant.seedCount) : '');
       setGerminationCount(editingPlant.germinationCount !== undefined ? String(editingPlant.germinationCount) : '');
       setPupCount(editingPlant.pupCount !== undefined ? String(editingPlant.pupCount) : '');
+      setIsNameManuallyEdited(true); // 既存編集時は手動入力を優先保護
+      setSuggestedMaster(null);
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
       setAutoSavedAt(null);
@@ -211,6 +220,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setId(autoId);
       setName('');
       setJapaneseName('');
+      setIsNameManuallyEdited(false);
+      setSuggestedMaster(null);
       setCategory(isSeedlingMode ? 'caudex' : 'agave');
       setLineageOrNursery(isSeedlingMode ? 'Koehres種子' : '');
       setAcquisitionDate(thisMonth);
@@ -402,6 +413,48 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     const next = generateNextId(prefix, allPlants);
     setId(next);
     setCategory(cat);
+  };
+
+  // 和名・通称の入力ハンドラー（学名自動入力 & サジェスト照合）
+  const handleJapaneseNameChange = (val: string) => {
+    setJapaneseName(val);
+
+    const match = lookupScientificName(val, allPlants);
+    setSuggestedMaster(match);
+
+    if (match) {
+      // ユーザーが手動で学名を直接編集していない場合、または学名が空の場合、自動入力
+      if (!isNameManuallyEdited || !name.trim()) {
+        setName(match.scientificName);
+      }
+
+      // 新規登録時、もしカテゴリがデフォルトのままであればカテゴリも自動同期
+      if (!editingPlant && match.category) {
+        setCategory(match.category);
+        // IDがAGVなどのデフォルトのままで別のカテゴリプレフィックスがあれば連動
+        if (id.startsWith('AGV') && match.prefix && match.prefix !== 'AGV') {
+          handleAutoId(match.prefix, match.category);
+        }
+      }
+    }
+  };
+
+  // 学名・品種名の手動編集ハンドラー
+  const handleScientificNameChange = (val: string) => {
+    setName(val);
+    setIsNameManuallyEdited(true);
+  };
+
+  // 候補チップをクリックして学名を適用
+  const handleApplySuggestion = (targetMatch: PlantNameMaster) => {
+    setName(targetMatch.scientificName);
+    setIsNameManuallyEdited(true);
+    if (!editingPlant && targetMatch.category) {
+      setCategory(targetMatch.category);
+      if (id.startsWith('AGV') && targetMatch.prefix && targetMatch.prefix !== 'AGV') {
+        handleAutoId(targetMatch.prefix, targetMatch.category);
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -830,31 +883,66 @@ export const PlantModal: React.FC<PlantModalProps> = ({
           </div>
 
           {/* 和名・通称 ＆ 品種名 (学名/英名) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                和名・通称 <span className="text-amber-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={japaneseName}
-                onChange={(e) => setJapaneseName(e.target.value)}
-                placeholder="例: チタノタ シーザー、グラキリス実生"
-                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
-              />
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-gray-300">
+                    和名・通称 <span className="text-amber-400">*</span>
+                  </label>
+                  <span className="text-[10px] text-gray-400">
+                    入力で学名を自動推定
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={japaneseName}
+                  onChange={(e) => handleJapaneseNameChange(e.target.value)}
+                  placeholder="例: パキポディウム・ホロンベンセ、白火焔"
+                  className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-gray-300">
+                    {managementType === 'seedling' ? '実生品種名 (学名/英名)' : '品種名 (学名/英名)'}
+                  </label>
+                  {name && suggestedMaster && name === suggestedMaster.scientificName && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium animate-in fade-in duration-200">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      和名から自動入力済
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => handleScientificNameChange(e.target.value)}
+                  placeholder={managementType === 'seedling' ? '例: Pachypodium gracilius (実生)' : '例: Pachypodium "horombense"'}
+                  className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                {managementType === 'seedling' ? '実生品種名 (学名/英名)' : '品種名 (学名/英名)'}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={managementType === 'seedling' ? "例: Pachypodium gracilius (実生)" : "例: Agave titanota 'Caesar'"}
-                className="w-full px-3.5 py-2 text-sm bg-[#17181c] border border-[#30323a] rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400"
-              />
-            </div>
+
+            {/* 学名候補のサジェストチップ (一致候補があり、現在入力値と異なる場合にワンタップ適用ボタンを表示) */}
+            {suggestedMaster && name !== suggestedMaster.scientificName && (
+              <div className="bg-[#18261e] border border-[#2b4c37] rounded-xl p-2 px-3 flex items-center justify-between text-xs animate-in fade-in duration-150">
+                <div className="flex items-center gap-2 text-emerald-300 min-w-0">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <span className="text-gray-300 text-[11px] flex-shrink-0">学名候補:</span>
+                  <span className="font-semibold text-emerald-200 truncate font-mono">
+                    {suggestedMaster.scientificName}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleApplySuggestion(suggestedMaster)}
+                  className="px-2.5 py-0.5 text-[11px] font-bold text-black bg-[#4ade80] hover:bg-[#22c55e] rounded-lg transition-colors flex-shrink-0 cursor-pointer ml-2 shadow-sm"
+                >
+                  学名に適用
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 入手日/播種日 ＆ 最終水やり日 ＆ 最終植え替え日 */}
