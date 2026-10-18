@@ -180,6 +180,10 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setSeedCount(existingDraft.seedCount !== undefined ? String(existingDraft.seedCount) : '');
       setGerminationCount(existingDraft.germinationCount !== undefined ? String(existingDraft.germinationCount) : '');
       setPupCount(existingDraft.pupCount !== undefined ? String(existingDraft.pupCount) : '');
+      setIsNameManuallyEdited(false);
+      setSuggestedMaster(
+        existingDraft.japaneseName ? lookupScientificName(existingDraft.japaneseName, allPlants) : null
+      );
       setHasRestoredDraft(true);
       setDraftSavedAt(existingDraft.savedAt);
       setError(null);
@@ -204,7 +208,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setSeedCount(editingPlant.seedCount !== undefined ? String(editingPlant.seedCount) : '');
       setGerminationCount(editingPlant.germinationCount !== undefined ? String(editingPlant.germinationCount) : '');
       setPupCount(editingPlant.pupCount !== undefined ? String(editingPlant.pupCount) : '');
-      setIsNameManuallyEdited(true); // 既存編集時は手動入力を優先保護
+      setIsNameManuallyEdited(false);
       setSuggestedMaster(null);
       setHasRestoredDraft(false);
       setDraftSavedAt(null);
@@ -373,6 +377,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setId(editingPlant.id);
       setName(editingPlant.name);
       setJapaneseName(editingPlant.japaneseName || '');
+      setIsNameManuallyEdited(false);
+      setSuggestedMaster(null);
       setCategory(editingPlant.category || 'agave');
       setLineageOrNursery(editingPlant.lineageOrNursery || '');
       setAcquisitionDate(editingPlant.acquisitionDate ? editingPlant.acquisitionDate.slice(0, 7) : '');
@@ -393,6 +399,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
       setId(autoId);
       setName('');
       setJapaneseName('');
+      setIsNameManuallyEdited(false);
+      setSuggestedMaster(null);
       setCategory('agave');
       setLineageOrNursery('');
       setAcquisitionDate(thisMonth);
@@ -419,6 +427,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const handleJapaneseNameChange = (val: string) => {
     setJapaneseName(val);
 
+    if (!val.trim()) {
+      setSuggestedMaster(null);
+      if (!isNameManuallyEdited) {
+        setName('');
+      }
+      return;
+    }
+
     const match = lookupScientificName(val, allPlants);
     setSuggestedMaster(match);
 
@@ -428,12 +444,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         setName(match.scientificName);
       }
 
-      // 新規登録時、もしカテゴリがデフォルトのままであればカテゴリも自動同期
-      if (!editingPlant && match.category) {
+      // 新規登録時、カテゴリと自動採番IDも植物の種類に合わせて自動同期
+      if (!editingPlant && match.category && match.category !== 'other') {
         setCategory(match.category);
-        // IDがAGVなどのデフォルトのままで別のカテゴリプレフィックスがあれば連動
-        if (id.startsWith('AGV') && match.prefix && match.prefix !== 'AGV') {
-          handleAutoId(match.prefix, match.category);
+        if (managementType !== 'seedling' && /^(AGV|CDX|PAC|COP|EUP)-\d+$/i.test(id) && match.prefix) {
+          const currentPrefix = id.split('-')[0].toUpperCase();
+          if (currentPrefix !== match.prefix) {
+            handleAutoId(match.prefix, match.category);
+          }
         }
       }
     }
@@ -442,7 +460,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   // 学名・品種名の手動編集ハンドラー
   const handleScientificNameChange = (val: string) => {
     setName(val);
-    setIsNameManuallyEdited(true);
+    // 学名欄が空にされた場合は再度和名からの自動入力を有効化
+    setIsNameManuallyEdited(val.trim().length > 0);
   };
 
   // 学名入力欄のフォーカスアウト時（horombense等に必ず""を自動付与）
@@ -454,11 +473,14 @@ export const PlantModal: React.FC<PlantModalProps> = ({
   const handleApplySuggestion = (targetMatch: PlantNameMaster) => {
     const formatted = formatScientificName(targetMatch.scientificName);
     setName(formatted);
-    setIsNameManuallyEdited(true);
-    if (!editingPlant && targetMatch.category) {
+    setIsNameManuallyEdited(false);
+    if (!editingPlant && targetMatch.category && targetMatch.category !== 'other') {
       setCategory(targetMatch.category);
-      if (id.startsWith('AGV') && targetMatch.prefix && targetMatch.prefix !== 'AGV') {
-        handleAutoId(targetMatch.prefix, targetMatch.category);
+      if (managementType !== 'seedling' && /^(AGV|CDX|PAC|COP|EUP)-\d+$/i.test(id) && targetMatch.prefix) {
+        const currentPrefix = id.split('-')[0].toUpperCase();
+        if (currentPrefix !== targetMatch.prefix) {
+          handleAutoId(targetMatch.prefix, targetMatch.category);
+        }
       }
     }
   };
