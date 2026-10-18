@@ -21,7 +21,14 @@ import {
   Trash2,
   FileSpreadsheet,
   Download,
+  Clock,
 } from 'lucide-react';
+import {
+  isAutoBackupEnabled,
+  setAutoBackupEnabled,
+  getAutoBackupInfo,
+  downloadBackupFile,
+} from '../utils/autoBackup';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -56,6 +63,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
+  // 自動バックアップステート
+  const [autoBackupOn, setAutoBackupOn] = useState(isAutoBackupEnabled());
+  const [backupInfo, setBackupInfo] = useState(getAutoBackupInfo());
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -64,6 +75,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setIconInput(brandIcon);
       setFooterInput(footerText);
       setSaveNotice(null);
+      setAutoBackupOn(isAutoBackupEnabled());
+      setBackupInfo(getAutoBackupInfo());
     }
   }, [isOpen, brandName, brandIcon, footerText]);
 
@@ -78,6 +91,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const showSaveSuccess = (message: string) => {
     setSaveNotice(message);
     setTimeout(() => setSaveNotice(null), 2500);
+  };
+
+  const handleToggleAutoBackup = () => {
+    const next = !autoBackupOn;
+    setAutoBackupOn(next);
+    setAutoBackupEnabled(next);
+    showSaveSuccess(next ? '自動バックアップを有効にしました' : '自動バックアップを停止しました');
+  };
+
+  const handleManualBackupNow = () => {
+    downloadBackupFile(plants, brandName, 'startup');
+    setBackupInfo(getAutoBackupInfo());
+    showSaveSuccess('ダウンロードフォルダへバックアップを保存しました');
   };
 
   // 写真アップロード処理（自動正方形トリミング＆リサイズ）
@@ -646,7 +672,82 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* 設定項目4：植物データのCSV出力（Excel対応） */}
+          {/* 設定項目4：自動バックアップ（深夜1時 ＆ 起動時） */}
+          <div className={`pt-5 border-t ${isDark ? 'border-[#262832]' : 'border-stone-200'}`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                <span>自動バックアップ（深夜1時 ＆ 起動時）</span>
+              </label>
+
+              {/* トグルスイッチ */}
+              <button
+                type="button"
+                onClick={handleToggleAutoBackup}
+                className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  autoBackupOn ? 'bg-emerald-600' : isDark ? 'bg-gray-700' : 'bg-gray-300'
+                }`}
+                role="switch"
+                aria-checked={autoBackupOn}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    autoBackupOn ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-stone-500'}`}>
+              アプリ起動時（1日1回）および深夜1時（開いている時）に、最新データを端末の<strong>「ダウンロード」フォルダ</strong>へ自動保存します。ブラウザデータが消去された場合でもダウンロードフォルダから安全に復元できます。
+            </p>
+
+            <div
+              className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                isDark ? 'bg-[#151619] border-[#282a34]' : 'bg-[#f7faf7] border-stone-200'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ${
+                      autoBackupOn ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'
+                    }`}
+                  />
+                  <span className={`text-xs font-bold ${isDark ? 'text-gray-200' : 'text-stone-800'}`}>
+                    {autoBackupOn ? '自動バックアップ稼働中' : '自動バックアップ停止中'}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    isDark ? 'bg-[#22242e] text-emerald-400 border border-emerald-800/60' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    保存先: ダウンロードフォルダ
+                  </span>
+                </div>
+                <div className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-stone-500'}`}>
+                  {backupInfo.lastBackupTime ? (
+                    <span>
+                      直近の自動バックアップ: {new Date(backupInfo.lastBackupTime).toLocaleString('ja-JP')}
+                      {backupInfo.lastBackupType === 'nightly' ? ' (深夜1時)' : ' (起動時)'}
+                    </span>
+                  ) : (
+                    <span>直近の自動バックアップ: まだ実行されていません</span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleManualBackupNow}
+                className="px-3.5 py-2 rounded-xl bg-[#282a33] hover:bg-[#343642] text-gray-200 text-xs font-semibold border border-[#3b3d4a] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+                title="今すぐダウンロードフォルダへバックアップ保存"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-400" />
+                <span>今すぐバックアップ</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 設定項目5：植物データのCSV出力（Excel対応） */}
           <div className={`pt-5 border-t ${isDark ? 'border-[#262832]' : 'border-stone-200'}`}>
             <label className="text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />

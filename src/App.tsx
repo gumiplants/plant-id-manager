@@ -19,7 +19,8 @@ import { PlantModal } from './components/PlantModal';
 import { PlantDetailModal } from './components/PlantDetailModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { SettingsModal } from './components/SettingsModal';
-import { Sprout, SearchX, Plus } from 'lucide-react';
+import { Sprout, SearchX, Plus, CheckCircle2 } from 'lucide-react';
+import { checkAndRunStartupBackup, checkAndRunNightlyBackup } from './utils/autoBackup';
 
 export const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -82,6 +83,9 @@ export const App: React.FC = () => {
   const [detailPlant, setDetailPlant] = useState<Plant | null>(null);
   const [deletingPlant, setDeletingPlant] = useState<Plant | null>(null);
 
+  // 自動バックアップ実行通知ステート
+  const [autoBackupNotice, setAutoBackupNotice] = useState<string | null>(null);
+
   // 初回読み込み
   useEffect(() => {
     const loaded = loadPlantsFromStorage();
@@ -95,6 +99,50 @@ export const App: React.FC = () => {
       savePlantsToStorage(plants);
     }
   }, [plants, isLoaded]);
+
+  // 1. 起動時自動バックアップ（ダウンロードフォルダへ保存）
+  useEffect(() => {
+    if (isLoaded && plants.length > 0) {
+      const timer = setTimeout(() => {
+        const executed = checkAndRunStartupBackup(plants, brandName);
+        if (executed) {
+          setAutoBackupNotice('起動時自動バックアップを実行しました（ダウンロードフォルダに保存）');
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded, brandName]);
+
+  // 2. 深夜1時自動バックアップ（開いたままにしている場合、01:00にダウンロードフォルダへ保存）
+  useEffect(() => {
+    if (!isLoaded || plants.length === 0) return;
+
+    // 1分ごとに現在時刻をチェック
+    const interval = setInterval(() => {
+      const executed = checkAndRunNightlyBackup(plants, brandName);
+      if (executed) {
+        setAutoBackupNotice('深夜1時自動バックアップを実行しました（ダウンロードフォルダに保存）');
+      }
+    }, 60 * 1000);
+
+    // 初回マウント時にも念のため判定（01:00台に開いた場合）
+    const executedNow = checkAndRunNightlyBackup(plants, brandName);
+    if (executedNow) {
+      setAutoBackupNotice('深夜1時自動バックアップを実行しました（ダウンロードフォルダに保存）');
+    }
+
+    return () => clearInterval(interval);
+  }, [isLoaded, plants, brandName]);
+
+  // 通知トースト自動消去（4秒）
+  useEffect(() => {
+    if (autoBackupNotice) {
+      const timer = setTimeout(() => {
+        setAutoBackupNotice(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoBackupNotice]);
 
   // テーマのDOM反映 ＆ LocalStorage永続化
   useEffect(() => {
@@ -611,6 +659,16 @@ export const App: React.FC = () => {
         theme={theme}
         onSetTheme={(newTheme) => setTheme(newTheme)}
       />
+
+      {/* 自動バックアップ通知トースト（ダウンロードフォルダに保存されたことを静かに案内） */}
+      {autoBackupNotice && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="bg-emerald-950/95 text-emerald-200 border border-emerald-600/70 shadow-2xl px-4 py-2.5 rounded-full text-xs font-medium flex items-center gap-2.5 backdrop-blur-md">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span>{autoBackupNotice}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
