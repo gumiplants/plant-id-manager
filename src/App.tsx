@@ -19,7 +19,7 @@ import { PlantModal } from './components/PlantModal';
 import { PlantDetailModal } from './components/PlantDetailModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { SettingsModal } from './components/SettingsModal';
-import { Sprout, SearchX, Plus, CheckCircle2 } from 'lucide-react';
+import { Sprout, SearchX, Plus, CheckCircle2, Droplets, Calendar, X } from 'lucide-react';
 import { checkAndRunStartupBackup, checkAndRunNightlyBackup } from './utils/autoBackup';
 
 export const App: React.FC = () => {
@@ -83,7 +83,12 @@ export const App: React.FC = () => {
   const [detailPlant, setDetailPlant] = useState<Plant | null>(null);
   const [deletingPlant, setDeletingPlant] = useState<Plant | null>(null);
 
-  // 自動バックアップ実行通知ステート
+  // 一括水やりモード管理
+  const [isBulkWaterMode, setIsBulkWaterMode] = useState(false);
+  const [selectedPlantIds, setSelectedPlantIds] = useState<string[]>([]);
+  const [bulkWaterDate, setBulkWaterDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+  // 自動バックアップ・操作通知ステート
   const [autoBackupNotice, setAutoBackupNotice] = useState<string | null>(null);
 
   // 初回読み込み
@@ -411,6 +416,67 @@ export const App: React.FC = () => {
     return filtered;
   }, [plants, managementType, activeCategory, searchQuery, sortField, sortOrder]);
 
+  // 一括水やりモードの切替（ONにした時は現在表示中の全株を初期選択状態にする）
+  const handleToggleBulkWaterMode = () => {
+    setIsBulkWaterMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setSelectedPlantIds(filteredAndSortedPlants.map((p) => p.id));
+        setBulkWaterDate(new Date().toISOString().split('T')[0]);
+      } else {
+        setSelectedPlantIds([]);
+      }
+      return next;
+    });
+  };
+
+  // 個別株の選択・解除トグル
+  const handleToggleSelectPlant = (plantId: string) => {
+    setSelectedPlantIds((prev) =>
+      prev.includes(plantId) ? prev.filter((id) => id !== plantId) : [...prev, plantId]
+    );
+  };
+
+  // 表示中の全株を選択
+  const handleSelectAllDisplayed = () => {
+    setSelectedPlantIds(filteredAndSortedPlants.map((p) => p.id));
+  };
+
+  // 選択をすべて解除
+  const handleClearSelection = () => {
+    setSelectedPlantIds([]);
+  };
+
+  // 一括水やりの実行（今日 または 指定日）
+  const handleExecuteBulkWater = (targetDate: string) => {
+    if (!targetDate || selectedPlantIds.length === 0) return;
+
+    const now = new Date().toISOString();
+    const selectedSet = new Set(selectedPlantIds);
+    const updatedCount = selectedPlantIds.length;
+
+    setPlants((prev) =>
+      prev.map((item) =>
+        selectedSet.has(item.id)
+          ? {
+              ...item,
+              lastWateredDate: targetDate,
+              updatedAt: now,
+            }
+          : item
+      )
+    );
+
+    if (detailPlant && selectedSet.has(detailPlant.id)) {
+      setDetailPlant((prev) => (prev ? { ...prev, lastWateredDate: targetDate } : null));
+    }
+
+    const formattedDate = targetDate.replace(/-/g, '/');
+    setAutoBackupNotice(`${updatedCount}株の水やり日を ${formattedDate} に一括更新しました`);
+    setIsBulkWaterMode(false);
+    setSelectedPlantIds([]);
+  };
+
   const isDark = theme === 'dark';
 
   const currentTypeTotalCount = plants.filter(
@@ -464,7 +530,130 @@ export const App: React.FC = () => {
           theme={theme}
           totalCount={currentTypeTotalCount}
           filteredCount={filteredAndSortedPlants.length}
+          isBulkWaterMode={isBulkWaterMode}
+          onToggleBulkWaterMode={handleToggleBulkWaterMode}
         />
+
+        {/* 一括水やり操作パネル */}
+        {isBulkWaterMode && (
+          <div
+            className={`rounded-2xl border p-3.5 sm:p-4 shadow-xl transition-all animate-in fade-in slide-in-from-top-2 duration-150 ${
+              isDark
+                ? 'bg-[#15261d] border-[#26583c] text-gray-100'
+                : 'bg-emerald-50/90 border-emerald-300 text-stone-900'
+            }`}
+          >
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+              {/* 左側：選択状態＆全選択・解除 */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#4ade80]">
+                    <Droplets className="w-4 h-4" />
+                    <span className={isDark ? 'text-emerald-300' : 'text-emerald-900'}>
+                      一括水やりモード
+                    </span>
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
+                      isDark
+                        ? 'bg-[#1b432e] text-[#4ade80] border-[#2d6a49]'
+                        : 'bg-emerald-600 text-white border-emerald-700'
+                    }`}
+                  >
+                    選択中: {selectedPlantIds.length} 株
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllDisplayed}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                      isDark
+                        ? 'bg-[#1d392b] hover:bg-[#264c39] text-emerald-200 border-[#316149]'
+                        : 'bg-white hover:bg-emerald-100 text-emerald-900 border-emerald-300'
+                    }`}
+                  >
+                    表示中の全{filteredAndSortedPlants.length}株を選択
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                      isDark
+                        ? 'bg-[#1b1d22] hover:bg-[#262930] text-gray-300 border-[#32353e]'
+                        : 'bg-white hover:bg-stone-100 text-stone-600 border-stone-300'
+                    }`}
+                  >
+                    すべて解除
+                  </button>
+                </div>
+                <p className={`text-[11px] ${isDark ? 'text-emerald-200/70' : 'text-emerald-800/80'}`}>
+                  ※下のカード（または一覧の行）をクリックすると、水やり対象の株を個別にON / OFFできます。
+                </p>
+              </div>
+
+              {/* 右側：①今日で一括水やり完了 ＆ ②日付を指定して一括水やり */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                {/* ① 今日で一括水やり完了ボタン */}
+                <button
+                  type="button"
+                  disabled={selectedPlantIds.length === 0}
+                  onClick={() => handleExecuteBulkWater(new Date().toISOString().split('T')[0])}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#4ade80] hover:bg-[#22c55e] text-black shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Droplets className="w-4 h-4 fill-current" />
+                  <span>今日で一括水やり完了 ({selectedPlantIds.length}株)</span>
+                </button>
+
+                {/* ② 水やりした日を指定して一括入力 */}
+                <div
+                  className={`flex items-center gap-1.5 p-1 pl-2.5 rounded-xl border ${
+                    isDark
+                      ? 'bg-[#121f18] border-[#2b5b40]'
+                      : 'bg-white border-emerald-300'
+                  }`}
+                >
+                  <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`} />
+                  <input
+                    type="date"
+                    value={bulkWaterDate}
+                    onChange={(e) => setBulkWaterDate(e.target.value)}
+                    className={`text-xs font-mono focus:outline-none bg-transparent py-1 ${
+                      isDark ? 'text-gray-100' : 'text-stone-800'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    disabled={selectedPlantIds.length === 0 || !bulkWaterDate}
+                    onClick={() => handleExecuteBulkWater(bulkWaterDate)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isDark
+                        ? 'bg-amber-400 hover:bg-amber-300 text-black'
+                        : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                    }`}
+                  >
+                    この日付で一括記録
+                  </button>
+                </div>
+
+                {/* 閉じるボタン */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBulkWaterMode(false);
+                    setSelectedPlantIds([]);
+                  }}
+                  className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                    isDark
+                      ? 'bg-[#1b1d22] hover:bg-[#262930] text-gray-400 hover:text-gray-200 border-[#32353e]'
+                      : 'bg-white hover:bg-stone-100 text-stone-500 hover:text-stone-800 border-stone-300'
+                  }`}
+                  title="一括水やりモードを閉じる"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 一覧表示部 */}
         {currentTypeTotalCount === 0 ? (
@@ -548,6 +737,9 @@ export const App: React.FC = () => {
             onDelete={(plant) => setDeletingPlant(plant)}
             onWaterPlant={handleWaterPlant}
             onDuplicate={handleDuplicatePlant}
+            isBulkWaterMode={isBulkWaterMode}
+            selectedPlantIds={selectedPlantIds}
+            onToggleSelectPlant={handleToggleSelectPlant}
           />
         ) : (
           /* テーブル表示（ライト・ダーク対応） */
@@ -561,6 +753,10 @@ export const App: React.FC = () => {
               setIsFormModalOpen(true);
             }}
             onDelete={(plant) => setDeletingPlant(plant)}
+            onWaterPlant={handleWaterPlant}
+            isBulkWaterMode={isBulkWaterMode}
+            selectedPlantIds={selectedPlantIds}
+            onToggleSelectPlant={handleToggleSelectPlant}
           />
         )}
       </main>

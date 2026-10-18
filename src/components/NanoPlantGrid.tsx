@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Plant, GridSize, Theme } from '../types/plant';
 import { getDaysSince, getMonthsSince, formatYearMonth } from '../utils/storage';
-import { Droplet, Edit3, Trash2, Sprout, Box, Copy } from 'lucide-react';
+import { Droplet, Edit3, Trash2, Sprout, Box, Copy, CheckSquare, Square } from 'lucide-react';
 
 interface NanoPlantGridProps {
   plants: Plant[];
@@ -12,6 +12,9 @@ interface NanoPlantGridProps {
   onDelete: (plant: Plant) => void;
   onWaterPlant: (plant: Plant) => void;
   onDuplicate?: (plant: Plant) => void;
+  isBulkWaterMode?: boolean;
+  selectedPlantIds?: string[];
+  onToggleSelectPlant?: (plantId: string) => void;
 }
 
 export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
@@ -23,6 +26,9 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
   onDelete,
   onWaterPlant,
   onDuplicate,
+  isBulkWaterMode = false,
+  selectedPlantIds = [],
+  onToggleSelectPlant,
 }) => {
   if (plants.length === 0) {
     return null;
@@ -43,18 +49,29 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
       {plants.map((plant) => {
         const daysSinceWatered = getDaysSince(plant.lastWateredDate);
         const hasWateredToday = daysSinceWatered === 0 && !!plant.lastWateredDate;
+        const isSelected = isBulkWaterMode && selectedPlantIds.includes(plant.id);
+
+        const handleCardClick = () => {
+          if (isBulkWaterMode && onToggleSelectPlant) {
+            onToggleSelectPlant(plant.id);
+          } else {
+            onViewDetail(plant);
+          }
+        };
 
         // 大サイズの場合
         if (gridSize === 'large') {
           return (
             <div
               key={plant.id}
-              onClick={() => onViewDetail(plant)}
+              onClick={handleCardClick}
               className={`group relative rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer flex flex-col justify-between border ${
-                isDark
+                isSelected
+                  ? 'border-[#4ade80] ring-2 ring-[#4ade80]/60 shadow-2xl'
+                  : isDark
                   ? 'bg-[#212226] border-[#2e3037] hover:border-[#4b4e5b] shadow-2xl shadow-black/40'
                   : 'bg-white border-stone-300 hover:border-emerald-600 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.12)]'
-              }`}
+              } ${isDark ? 'bg-[#212226]' : 'bg-white'}`}
             >
               {/* 大：迫力のある写真エリア */}
               <div className={`relative w-full aspect-[16/10] overflow-hidden ${isDark ? 'bg-[#141518]' : 'bg-[#eef3ee]'}`}>
@@ -77,6 +94,22 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                     isDark ? 'from-[#212226]' : 'from-white via-white/30 to-transparent'
                   }`}
                 />
+
+                {/* 一括水やり選択チェックバッジ */}
+                {isBulkWaterMode && (
+                  <div className="absolute top-3.5 left-3.5 z-20">
+                    <span
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-lg border backdrop-blur ${
+                        isSelected
+                          ? 'bg-[#4ade80] text-black border-[#22c55e]'
+                          : 'bg-black/70 text-gray-200 border-white/20'
+                      }`}
+                    >
+                      {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      <span>{isSelected ? '選択中' : '選択する'}</span>
+                    </span>
+                  </div>
+                )}
 
                 {/* ホバー時ボタン */}
                 <div
@@ -276,12 +309,14 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
           return (
             <div
               key={plant.id}
-              onClick={() => onViewDetail(plant)}
+              onClick={handleCardClick}
               className={`group relative rounded-xl overflow-hidden transition-all duration-200 cursor-pointer flex flex-col justify-between border ${
-                isDark
+                isSelected
+                  ? 'border-[#4ade80] ring-2 ring-[#4ade80]/60 shadow-lg'
+                  : isDark
                   ? 'bg-[#212226] border-[#2e3037] hover:border-[#43454f] shadow-lg shadow-black/30'
                   : 'bg-white border-stone-300 hover:border-emerald-600 shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(16,185,129,0.12)]'
-              }`}
+              } ${isDark ? 'bg-[#212226]' : 'bg-white'}`}
             >
               {/* 小：正方形写真 */}
               <div className={`relative w-full aspect-square overflow-hidden ${isDark ? 'bg-[#141518]' : 'bg-[#eef3ee]'}`}>
@@ -303,6 +338,22 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                     isDark ? 'from-[#212226]' : 'from-white via-white/30 to-transparent'
                   }`}
                 />
+
+                {/* 一括水やり選択チェックバッジ */}
+                {isBulkWaterMode && (
+                  <div className="absolute top-2 left-2 z-20">
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-md border backdrop-blur ${
+                        isSelected
+                          ? 'bg-[#4ade80] text-black border-[#22c55e]'
+                          : 'bg-black/70 text-gray-200 border-white/20'
+                      }`}
+                    >
+                      {isSelected ? <CheckSquare className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+                      <span>{isSelected ? '選択中' : '選択'}</span>
+                    </span>
+                  </div>
+                )}
 
                 {/* 管理IDバッジ & 実生バッジ */}
                 <div className="absolute bottom-1.5 left-2 z-10 flex items-center gap-1">
@@ -423,12 +474,14 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
         return (
           <div
             key={plant.id}
-            onClick={() => onViewDetail(plant)}
+            onClick={handleCardClick}
             className={`group relative rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer flex flex-col justify-between border ${
-              isDark
+              isSelected
+                ? 'border-[#4ade80] ring-2 ring-[#4ade80]/60 shadow-xl'
+                : isDark
                 ? 'bg-[#212226] border-[#2e3037] hover:border-[#43454f] shadow-xl shadow-black/30'
                 : 'bg-white border-stone-300 hover:border-emerald-600 shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.12)]'
-            }`}
+            } ${isDark ? 'bg-[#212226]' : 'bg-white'}`}
           >
             {/* 中：写真エリア */}
             <div className={`relative w-full aspect-[4/3] overflow-hidden ${isDark ? 'bg-[#141518]' : 'bg-[#eef3ee]'}`}>
@@ -451,6 +504,22 @@ export const NanoPlantGrid: React.FC<NanoPlantGridProps> = ({
                   isDark ? 'from-[#212226]' : 'from-white via-white/30 to-transparent'
                 }`}
               />
+
+              {/* 一括水やり選択チェックバッジ */}
+              {isBulkWaterMode && (
+                <div className="absolute top-3 left-3 z-20">
+                  <span
+                    className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg border backdrop-blur ${
+                      isSelected
+                        ? 'bg-[#4ade80] text-black border-[#22c55e]'
+                        : 'bg-black/70 text-gray-200 border-white/20'
+                    }`}
+                  >
+                    {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                    <span>{isSelected ? '選択中' : '選択する'}</span>
+                  </span>
+                </div>
+              )}
 
               <div
                 className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { SortField, SortOrder, ViewMode, GridSize, Theme } from '../types/plant';
-import { Search, X, LayoutGrid, LayoutList, ArrowUpDown } from 'lucide-react';
+import { Search, X, LayoutGrid, LayoutList, ArrowUpDown, Droplets } from 'lucide-react';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -16,6 +16,8 @@ interface SearchBarProps {
   theme: Theme;
   totalCount: number;
   filteredCount: number;
+  isBulkWaterMode?: boolean;
+  onToggleBulkWaterMode?: () => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -32,6 +34,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   theme,
   totalCount,
   filteredCount,
+  isBulkWaterMode = false,
+  onToggleBulkWaterMode,
 }) => {
   const isDark = theme === 'dark';
 
@@ -67,8 +71,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         )}
       </div>
 
-      {/* 並び替え & 大中小切替 & 表示切替 */}
+      {/* 一括水やり & 並び替え & 大中小切替 & 表示切替 */}
       <div className="flex items-center gap-2 flex-wrap">
+        {/* 一括水やりボタン */}
+        {onToggleBulkWaterMode && (
+          <button
+            type="button"
+            onClick={onToggleBulkWaterMode}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
+              isBulkWaterMode
+                ? isDark
+                  ? 'bg-[#4ade80] text-black border-[#22c55e] shadow-emerald-950/50'
+                  : 'bg-emerald-600 text-white border-emerald-700'
+                : isDark
+                ? 'bg-[#153423] hover:bg-[#1f4932] text-[#4ade80] border-[#26583c]'
+                : 'bg-[#ebf5ed] hover:bg-[#ddf0e0] text-emerald-800 border-emerald-300'
+            }`}
+            title="複数の株または全株の水やり日をまとめて更新します"
+          >
+            <Droplets className="w-3.5 h-3.5" />
+            <span>{isBulkWaterMode ? '一括水やり中' : '一括水やり'}</span>
+          </button>
+        )}
+
         {/* ソート */}
         <div
           className={`flex items-center rounded-lg px-2 py-0.5 text-xs border ${
